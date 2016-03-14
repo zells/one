@@ -25,39 +25,31 @@ public class LocalCell implements Cell {
     }
 
     @Override
-    public void deliver(Path context, Path target, Path message) throws DeliveryFailed {
+    public boolean deliver(Path context, Path target, Path message) {
         if (target.isEmpty()) {
             if (response != null) {
                 response.execute(this, context, message);
             }
-            return;
+            return true;
         }
 
         Name name = target.first();
 
         if (name instanceof Parent && parent != null) {
-            parent.deliver(context.up(), target.rest(), message.in(context.last()));
-            return;
+            return parent.deliver(context.up(), target.rest(), message.in(context.last()));
         }
 
         if (name instanceof Root) {
             if (parent == null) {
-                if (response != null) {
-                    response.execute(this, context, message);
-                }
-                return;
+                return deliver(context, new Path(), message);
             }
 
-            parent.deliver(context.up(), target, message.in(context.last()));
-            return;
+            return parent.deliver(context.up(), target, message.in(context.last()));
         }
 
-        if (children.containsKey(name)) {
-            children.get(name).deliver(context.with(name), target.rest(), message.in(Parent.name()));
-            return;
-        }
+        return children.containsKey(name)
+                && children.get(name).deliver(context.with(name), target.rest(), message.in(Parent.name()));
 
-        throw new DeliveryFailed();
     }
 
     public void setChild(Child name, Cell child) {
