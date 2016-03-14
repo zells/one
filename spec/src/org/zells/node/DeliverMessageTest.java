@@ -1,15 +1,18 @@
 package org.zells.node;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.DeliveryFailed;
 import org.zells.node.model.Response;
 import org.zells.node.model.local.LocalCell;
-import org.zells.node.model.reference.*;
+import org.zells.node.model.reference.Child;
+import org.zells.node.model.reference.Parent;
+import org.zells.node.model.reference.Path;
+import org.zells.node.model.reference.Root;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class DeliverMessageTest {
 
@@ -30,13 +33,13 @@ public class DeliverMessageTest {
         LocalCell cell = new LocalCell().setResponse(response);
 
         cell.deliver(
-                new Path(new Name("foo")),
+                new Path(Child.name("foo")),
                 new Path(),
-                new Path(new Name("bar")));
+                new Path(Child.name("bar")));
 
         assertEquals(cell, response.cell);
-        assertEquals(new Path(new Name("foo")), response.context);
-        assertEquals(new Path(new Name("bar")), response.message);
+        assertEquals(new Path(Child.name("foo")), response.context);
+        assertEquals(new Path(Child.name("bar")), response.message);
     }
 
     @Test
@@ -44,7 +47,7 @@ public class DeliverMessageTest {
         try {
             new LocalCell().deliver(
                     new Path(),
-                    new Path(new Name("foo")),
+                    new Path(Child.name("foo")),
                     new Path());
             fail("No exception thrown");
         } catch (DeliveryFailed ignored) {
@@ -54,12 +57,12 @@ public class DeliverMessageTest {
     @Test
     public void wrongChild() {
         LocalCell cell = new LocalCell();
-        cell.setChild(new Name("foo"), new LocalCell(cell));
+        cell.setChild(Child.name("foo"), new LocalCell(cell));
 
         try {
             cell.deliver(
                     new Path(),
-                    new Path(new Name("bar")),
+                    new Path(Child.name("bar")),
                     new Path());
             fail("No exception thrown");
         } catch (DeliveryFailed ignored) {
@@ -71,15 +74,15 @@ public class DeliverMessageTest {
         LocalCell cell = new LocalCell();
         LocalCell child = new LocalCell(cell).setResponse(response);
 
-        cell.setChild(new Name("foo"), child);
+        cell.setChild(Child.name("foo"), child);
         cell.deliver(
-                new Path(new Name("me")),
-                new Path(new Name("foo")),
-                new Path(new Name("message")));
+                new Path(Child.name("me")),
+                new Path(Child.name("foo")),
+                new Path(Child.name("message")));
 
         assertEquals(child, response.cell);
-        assertEquals(new Path(new Name("me"), new Name("foo")), response.context);
-        assertEquals(new Path(Parent.name(), new Name("message")), response.message);
+        assertEquals(new Path(Child.name("me"), Child.name("foo")), response.context);
+        assertEquals(new Path(Parent.name(), Child.name("message")), response.message);
     }
 
     @Test
@@ -88,17 +91,17 @@ public class DeliverMessageTest {
         LocalCell child = new LocalCell(cell).setResponse(response);
         LocalCell replaced = new LocalCell(cell).setResponse(response);
 
-        cell.setChild(new Name("foo"), child);
-        cell.setChild(new Name("foo"), replaced);
+        cell.setChild(Child.name("foo"), child);
+        cell.setChild(Child.name("foo"), replaced);
 
         cell.deliver(
-                new Path(new Name("me")),
-                new Path(new Name("foo")),
-                new Path(new Name("message")));
+                new Path(Child.name("me")),
+                new Path(Child.name("foo")),
+                new Path(Child.name("message")));
 
         assertEquals(replaced, response.cell);
-        assertEquals(new Path(new Name("me"), new Name("foo")), response.context);
-        assertEquals(new Path(Parent.name(), new Name("message")), response.message);
+        assertEquals(new Path(Child.name("me"), Child.name("foo")), response.context);
+        assertEquals(new Path(Parent.name(), Child.name("message")), response.message);
     }
 
     @Test
@@ -106,15 +109,15 @@ public class DeliverMessageTest {
         LocalCell cell = new LocalCell().setResponse(response);
         LocalCell child = new LocalCell(cell);
 
-        cell.setChild(new Name("foo"), child);
+        cell.setChild(Child.name("foo"), child);
         child.deliver(
-                new Path(new Name("parent"), new Name("child")),
+                new Path(Child.name("parent"), Child.name("child")),
                 new Path(Parent.name()),
-                new Path(new Name("message")));
+                new Path(Child.name("message")));
 
         assertEquals(cell, response.cell);
-        assertEquals(new Path(new Name("parent")), response.context);
-        assertEquals(new Path(new Name("child"), new Name("message")), response.message);
+        assertEquals(new Path(Child.name("parent")), response.context);
+        assertEquals(new Path(Child.name("child"), Child.name("message")), response.message);
     }
 
     @Test
@@ -123,17 +126,17 @@ public class DeliverMessageTest {
         LocalCell cell = new LocalCell(root);
         LocalCell child = new LocalCell(cell);
 
-        root.setChild(new Name("foo"), cell);
-        cell.setChild(new Name("bar"), child);
+        root.setChild(Child.name("foo"), cell);
+        cell.setChild(Child.name("bar"), child);
 
         child.deliver(
-                new Path(new Name("one"), new Name("two"), new Name("three")),
+                new Path(Child.name("one"), Child.name("two"), Child.name("three")),
                 new Path(Root.name()),
-                new Path(new Name("message")));
+                new Path(Child.name("message")));
 
         assertEquals(root, response.cell);
-        assertEquals(new Path(new Name("one")), response.context);
-        assertEquals(new Path(new Name("two"), new Name("three"), new Name("message")), response.message);
+        assertEquals(new Path(Child.name("one")), response.context);
+        assertEquals(new Path(Child.name("two"), Child.name("three"), Child.name("message")), response.message);
     }
 
     private class TestResponse implements Response {

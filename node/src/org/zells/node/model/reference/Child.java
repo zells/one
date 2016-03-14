@@ -1,0 +1,29 @@
+package org.zells.node.model.reference;
+
+public class Child implements Name {
+
+    private String name;
+
+    private Child(String name) {
+        this.name = name;
+    }
+
+    public static Child name(String name) {
+        return new Child(name);
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Child && ((Child) obj).name.equals(name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+}

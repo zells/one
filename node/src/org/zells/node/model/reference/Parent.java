@@ -1,14 +1,18 @@
 package org.zells.node.model.reference;
 
-public class Parent extends Name {
+public class Parent implements Name {
 
     private static Parent singleton = new Parent();
 
     private Parent() {
-        super("^");
     }
 
-    public static Name name() {
+    public static Parent name() {
         return singleton;
+    }
+
+    @Override
+    public String toString() {
+        return "^";
     }
 }

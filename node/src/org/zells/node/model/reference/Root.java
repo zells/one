@@ -1,14 +1,18 @@
 package org.zells.node.model.reference;
 
-public class Root extends Name {
+public class Root implements Name {
 
     private static Root singleton = new Root();
 
     private Root() {
-        super("*");
     }
 
-    public static Name name() {
+    public static Root name() {
         return singleton;
+    }
+
+    @Override
+    public String toString() {
+        return "°";
     }
 }

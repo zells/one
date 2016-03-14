@@ -3,10 +3,7 @@ package org.zells.node.model.local;
 import org.zells.node.model.Cell;
 import org.zells.node.model.DeliveryFailed;
 import org.zells.node.model.Response;
-import org.zells.node.model.reference.Name;
-import org.zells.node.model.reference.Parent;
-import org.zells.node.model.reference.Path;
-import org.zells.node.model.reference.Root;
+import org.zells.node.model.reference.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,14 +35,14 @@ public class LocalCell implements Cell {
             return;
         }
 
-        Name child = target.first();
+        Name name = target.first();
 
-        if (child instanceof Parent && parent != null) {
+        if (name instanceof Parent && parent != null) {
             parent.deliver(context.up(), target.rest(), message.in(context.last()));
             return;
         }
 
-        if (child instanceof Root) {
+        if (name instanceof Root) {
             if (parent == null) {
                 if (response != null) {
                     response.execute(this, context, message);
@@ -57,15 +54,15 @@ public class LocalCell implements Cell {
             return;
         }
 
-        if (children.containsKey(child)) {
-            children.get(child).deliver(context.with(child), target.rest(), message.in(Parent.name()));
+        if (children.containsKey(name)) {
+            children.get(name).deliver(context.with(name), target.rest(), message.in(Parent.name()));
             return;
         }
 
         throw new DeliveryFailed();
     }
 
-    public void setChild(Name name, Cell child) {
+    public void setChild(Child name, Cell child) {
         children.put(name, child);
     }
 }

@@ -28,10 +28,10 @@ public class Path {
         return names.get(names.size() - 1);
     }
 
-    public Path with(Name child) {
+    public Path with(Name Name) {
         List<Name> newNames = new ArrayList<Name>(names.size() + 1);
         for (Name name : names) newNames.add(name);
-        newNames.add(child);
+        newNames.add(Name);
 
         return new Path(newNames);
     }
@@ -61,7 +61,7 @@ public class Path {
 
     public static Path parse(String string) {
         List<Name> names = new ArrayList<Name>();
-        for (String s : Arrays.asList(string.split("/\\./"))) names.add(new Name(s));
+        for (String s : Arrays.asList(string.split("/\\./"))) names.add(Child.name(s));
 
         return new Path(names);
     }
