@@ -1,5 +1,6 @@
 package org.zells.node.model;
 
+import org.zells.node.model.local.LocalCell;
 import org.zells.node.model.reference.*;
 
 public abstract class Cell {
@@ -48,4 +49,6 @@ public abstract class Cell {
 
         return deliverOn(context, target, message);
     }
+
+    public abstract LocalCell resolve(Path path);
 }

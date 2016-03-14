@@ -48,6 +48,19 @@ public class LocalCell extends Cell {
     }
 
     @Override
+    public LocalCell resolve(Path path) {
+        if (path.isEmpty()) {
+            return this;
+        }
+
+        if (children.containsKey(path.first())) {
+            return children.get(path.first()).resolve(path.rest());
+        }
+
+        throw new RuntimeException("Child not found");
+    }
+
+    @Override
     protected void execute(Path context, Path message) {
         if (response != null) {
             response.execute(this, context, message);

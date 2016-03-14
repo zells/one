@@ -1,86 +1,82 @@
 package org.zells.node;
 
-public class Node {
+import org.zells.node.io.Server;
+import org.zells.node.io.SignalListener;
+import org.zells.node.model.Cell;
+import org.zells.node.model.local.LocalCell;
+import org.zells.node.model.reference.Child;
+import org.zells.node.model.reference.Path;
+import org.zells.node.model.remote.Protocol;
+import org.zells.node.model.remote.RemoteCell;
 
-//    private final ServerSocket serverSocket;
-//
-//    public static void main(String[] args) throws IOException {
-//        int portNumber = 9999;
-//        if (args.length == 1) {
-//            portNumber = Integer.parseInt(args[0]);
-//        }
-//
-//        new Node(portNumber).run();
-//    }
-//
-//    public Node(int portNumber) throws IOException {
-//        serverSocket = new ServerSocket(portNumber);
-//    }
-//
-//    private void run() throws IOException {
-//        while (true) {
-//            new Thread(new SignalWorker(serverSocket.accept()))
-//                    .start();
-//        }
-//    }
-//
-//    private void handleSignal(String signal) throws Exception {
-//        String[] parameters = signal.split(" ");
+import java.io.PrintStream;
 
-//        switch (parameters[0]) {
-//            case Peer.SIGNAL_DELIVER:
-//                if (parameters.length != 4) {
-//                    throw new Exception("Malformed signal");
-//                }
-//                root.deliver(Path.parse(parameters[1]), Path.parse(parameters[2]), Path.parse(parameters[3]));
-//                return;
-//            case Peer.SIGNAL_JOIN:
-//                if (parameters.length != 4) {
-//                    throw new Exception("Malformed signal");
-//                }
-//                root.join(Path.parse(parameters[1]), parameters[2], Integer.parseInt(parameters[3]));
-//                return;
-//            default:
-//                throw new Exception("Invalid signal");
-//        }
-//    }
-//
-//    private class SignalWorker implements Runnable {
-//        private final PrintWriter out;
-//        private final BufferedReader in;
-//        private final Socket client;
-//
-//        public SignalWorker(Socket client) throws IOException {
-//            this.client = client;
-//            out = new PrintWriter(client.getOutputStream(), true);
-//            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-//        }
-//
-//        @Override
-//        public void run() {
-//            try {
-//                String signal = in.readLine();
-//
-//                System.out.println("> " + signal);
-//                handleSignal(signal);
-//
-//                out.println(SocketPeer.SIGNAL_ACK);
-//                System.out.println("< " + SocketPeer.SIGNAL_ACK);
-//
-//            } catch (Exception e) {
-//                out.println(SocketPeer.SIGNAL_FAIL + " " + e.getMessage());
-//                System.out.println("< " + SocketPeer.SIGNAL_FAIL + " " + e.getMessage());
-//                e.printStackTrace();
-//            }
-//
-//
-//            try {
-//                out.close();
-//                in.close();
-//                client.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
+public class Node implements SignalListener {
+
+    private final Cell root;
+    private Server server;
+    private PrintStream error = System.err;
+
+    public Node(Cell root, Server server) {
+        this.root = root;
+        this.server = server;
+    }
+
+    public Node setErrorStream(PrintStream stream) {
+        error = stream;
+        return this;
+    }
+
+    public void run() {
+        server.listen(this);
+    }
+
+    @Override
+    public String respondTo(String signal) {
+        try {
+            return handleSignal(signal);
+        } catch (Exception e) {
+            e.printStackTrace(error);
+            return Protocol.fail(e.getMessage());
+        }
+    }
+
+    private String handleSignal(String signal) throws Exception {
+        if (Protocol.isDeliver(signal)) {
+            return handleDeliver(Protocol.parseDeliver(signal));
+        } else if (Protocol.isJoin(signal)) {
+            return handleJoin(Protocol.parseJoin(signal));
+        }
+
+        throw new Exception("Unknown signal");
+    }
+
+    private String handleJoin(Object[] parameters) {
+        Path path = (Path) parameters[0];
+
+        LocalCell parent = root.resolve(path.rest().up());
+        RemoteCell remote = new RemoteCell(parent, server.getHost(), server.getPort());
+
+        parent.setChild((Child)path.last(), remote);
+        remote.joinedBy(server.makePeer((String)parameters[1], (Integer)parameters[2]));
+
+        return Protocol.ack();
+    }
+
+    private String handleDeliver(Object[] parameters) throws Exception {
+        Path context = (Path) parameters[0];
+        Path target = (Path) parameters[1];
+        Path message = (Path) parameters[2];
+
+        Cell cell = root;
+        if (!context.isEmpty()) {
+            cell = root.resolve(context.rest());
+        }
+
+        if (cell.deliver(context, target, message)) {
+            return Protocol.ack();
+        }
+
+        throw new Exception("Delivery failed");
+    }
 }

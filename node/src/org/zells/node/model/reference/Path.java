@@ -50,8 +50,12 @@ public class Path {
     }
 
     public Path in(Name parent) {
+        return in(new Path(parent));
+    }
+
+    public Path in(Path context) {
         List<Name> newNames = new ArrayList<Name>(names.size() + 1);
-        newNames.add(parent);
+        for (Name name : context.names) newNames.add(name);
         for (Name name : names) newNames.add(name);
 
         return new Path(newNames);

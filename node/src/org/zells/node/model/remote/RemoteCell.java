@@ -1,6 +1,7 @@
 package org.zells.node.model.remote;
 
 import org.zells.node.model.Cell;
+import org.zells.node.model.local.LocalCell;
 import org.zells.node.model.local.Peer;
 import org.zells.node.model.reference.Name;
 import org.zells.node.model.reference.Path;
@@ -38,6 +39,11 @@ public class RemoteCell extends Cell {
     @Override
     protected Name nameOf(Cell child) {
         throw new RuntimeException("Remote cells cannot have children.");
+    }
+
+    @Override
+    public LocalCell resolve(Path path) {
+        throw new RuntimeException("Remote cells cannot resolve paths");
     }
 
     public RemoteCell join(Peer peer) {
