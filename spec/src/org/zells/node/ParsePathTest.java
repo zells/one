@@ -32,7 +32,7 @@ public class ParsePathTest {
 
     @Test
     public void root() {
-        assertPath(new Path(Root.name()), "°");
+        assertPath(new Path(Root.name()), "*");
     }
 
     @Test

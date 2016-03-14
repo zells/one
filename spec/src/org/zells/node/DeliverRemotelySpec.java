@@ -23,7 +23,7 @@ public class DeliverRemotelySpec {
         cell.setChild(Child.name("bar"), remoteCell);
         remoteCell.join(peer);
 
-        assertEquals(Protocol.join(Path.parse("°.foo.bar"), "example.com", 1234), peer.sent);
+        assertEquals(Protocol.join(Path.parse("*.foo.bar"), "example.com", 1234), peer.sent);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class DeliverRemotelySpec {
 
     private class FakePeer implements Peer {
         public String sent;
-        private String response = Protocol.ack();
+        private String response = Protocol.ok();
 
         public FakePeer() {
         }

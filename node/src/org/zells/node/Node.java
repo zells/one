@@ -60,7 +60,7 @@ public class Node implements SignalListener {
         parent.setChild((Child)path.last(), remote);
         remote.joinedBy(server.makePeer((String)parameters[1], (Integer)parameters[2]));
 
-        return Protocol.ack();
+        return Protocol.ok();
     }
 
     private String handleDeliver(Object[] parameters) throws Exception {
@@ -74,7 +74,7 @@ public class Node implements SignalListener {
         }
 
         if (cell.deliver(context, target, message)) {
-            return Protocol.ack();
+            return Protocol.ok();
         }
 
         throw new Exception("Delivery failed");

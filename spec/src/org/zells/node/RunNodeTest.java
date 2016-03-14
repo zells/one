@@ -68,7 +68,7 @@ public class RunNodeTest {
         new Node(root, server).run();
         server.receive(Protocol.deliver(new Path(), Path.parse("foo"), Path.parse("message")));
 
-        assertEquals(Protocol.ack(), server.responded);
+        assertEquals(Protocol.ok(), server.responded);
         assertEquals(cell, response.executed);
     }
 
@@ -86,7 +86,7 @@ public class RunNodeTest {
         new Node(root, server).run();
         server.receive(Protocol.deliver(Path.parse("root.foo"), Path.parse("bar"), Path.parse("message")));
 
-        assertEquals(Protocol.ack(), server.responded);
+        assertEquals(Protocol.ok(), server.responded);
         assertEquals(child, response.executed);
     }
 
@@ -101,7 +101,7 @@ public class RunNodeTest {
         new Node(root, server).run();
         server.receive(Protocol.join(Path.parse("root.foo.bar"), "other.host", 1234));
 
-        assertEquals(Protocol.ack(), server.responded);
+        assertEquals(Protocol.ok(), server.responded);
 
         cell.deliver(Path.parse("root.foo"), Path.parse("bar.baz"), Path.parse("message"));
         assertEquals(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("baz"), Path.parse("^.message")) +
@@ -158,7 +158,7 @@ public class RunNodeTest {
         @Override
         public String send(String signal) {
             sent = signal + " -> " + host + ":" + port;
-            return Protocol.ack();
+            return Protocol.ok();
         }
     }
 }

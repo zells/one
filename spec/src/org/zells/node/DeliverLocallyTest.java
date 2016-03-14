@@ -120,7 +120,7 @@ public class DeliverLocallyTest {
 
         child.deliver(
                 Path.parse("one.two.three"),
-                Path.parse("°"),
+                Path.parse("*"),
                 Path.parse("message"));
 
         assertEquals(root, response.cell);

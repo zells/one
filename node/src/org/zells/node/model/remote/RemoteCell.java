@@ -29,7 +29,7 @@ public class RemoteCell extends Cell {
     @Override
     public boolean deliverOn(Path context, Path target, Path message) {
         for (Peer peer : peers) {
-            if (peer.send(Protocol.deliver(context, target, message)).equals(Protocol.ack())) {
+            if (peer.send(Protocol.deliver(context, target, message)).equals(Protocol.ok())) {
                 return true;
             }
         }

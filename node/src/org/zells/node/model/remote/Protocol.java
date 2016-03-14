@@ -4,11 +4,13 @@ import org.zells.node.model.reference.Path;
 
 public class Protocol {
 
+    private static final String OK = "OK";
+    private static final String FAIL = "FAIL";
     private static final String DELIVER = "DELIVER";
     private static final String JOIN = "JOIN";
 
-    public static String ack() {
-        return "ACK";
+    public static String ok() {
+        return OK;
     }
 
     public static String deliver(Path context, Path target, Path message) {
@@ -16,7 +18,7 @@ public class Protocol {
     }
 
     public static String fail(String message) {
-        return "FAIL " + message;
+        return FAIL + " " + message;
     }
 
     public static String join(Path path, String host, int port) {
