@@ -13,6 +13,6 @@ public class Root implements Name {
 
     @Override
     public String toString() {
-        return "°";
+        return "*";
     }
 }
