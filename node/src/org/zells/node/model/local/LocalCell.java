@@ -1,8 +1,6 @@
 package org.zells.node.model.local;
 
 import org.zells.node.model.Cell;
-import org.zells.node.model.DeliveryFailed;
-import org.zells.node.model.Response;
 import org.zells.node.model.reference.*;
 
 import java.util.HashMap;

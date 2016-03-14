@@ -1,5 +1,6 @@
-package org.zells.node.model;
+package org.zells.node.model.local;
 
+import org.zells.node.model.Cell;
 import org.zells.node.model.reference.Path;
 
 public interface Response {
