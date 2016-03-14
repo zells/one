@@ -1,0 +1,52 @@
+package org.zells.node;
+
+import org.junit.Test;
+import org.zells.node.model.reference.Child;
+import org.zells.node.model.reference.Parent;
+import org.zells.node.model.reference.Path;
+import org.zells.node.model.reference.Root;
+
+import static org.junit.Assert.assertEquals;
+
+public class ParsePathTest {
+
+    @Test
+    public void emptyPath() {
+        assertPath(new Path(), "");
+    }
+
+    @Test
+    public void singleName() {
+        assertPath(new Path(Child.name("foo")), "foo");
+    }
+
+    @Test
+    public void multipleNames() {
+        assertPath(new Path(Child.name("foo"), Child.name("bar"), Child.name("baz")), "foo.bar.baz");
+    }
+
+    @Test
+    public void parent() {
+        assertPath(new Path(Parent.name()), "^");
+    }
+
+    @Test
+    public void root() {
+        assertPath(new Path(Root.name()), "°");
+    }
+
+    @Test
+    public void escapedName() {
+        assertPath(new Path(Child.name("fo\\o.bar's"), Child.name("baz")), "'fo\\\\o.bar\\'s'.baz");
+    }
+
+    @Test
+    public void multipleDots() {
+        assertEquals(new Path(Child.name("foo"), Child.name("bar")), Path.parse("..foo..bar.."));
+    }
+
+    private void assertPath(Path path, String string) {
+        assertEquals(path, Path.parse(string));
+        assertEquals(string, path.toString());
+    }
+}

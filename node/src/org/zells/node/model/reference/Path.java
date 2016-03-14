@@ -1,5 +1,7 @@
 package org.zells.node.model.reference;
 
+import org.zells.node.io.PathParser;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,23 +62,12 @@ public class Path {
     }
 
     public static Path parse(String string) {
-        List<Name> names = new ArrayList<Name>();
-        for (String s : Arrays.asList(string.split("/\\./"))) names.add(Child.name(s));
-
-        return new Path(names);
+        return PathParser.parse(string);
     }
 
     @Override
     public String toString() {
-        if (names.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder path = new StringBuilder();
-        for (Name name : names) {
-            path.append(".").append(name.toString());
-        }
-        return path.substring(1);
+        return PathParser.serialize(names);
     }
 
     @Override
