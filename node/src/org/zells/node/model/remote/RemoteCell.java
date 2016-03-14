@@ -40,8 +40,12 @@ public class RemoteCell extends Cell {
         throw new RuntimeException("Remote cells cannot have children.");
     }
 
-    public RemoteCell addPeer(Peer peer) {
+    public RemoteCell join(Peer peer) {
         peer.send(Protocol.join(getPath(), host, port));
+        return joinedBy(peer);
+    }
+
+    public RemoteCell joinedBy(Peer peer) {
         peers.add(peer);
         return this;
     }
