@@ -16,4 +16,8 @@ public class Protocol {
     public static String fail(String message) {
         return "FAIL " + message;
     }
+
+    public static String join(Path path, String host, int port) {
+        return "JOIN " + path + " " + host + " " + port;
+    }
 }
