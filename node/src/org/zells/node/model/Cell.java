@@ -70,7 +70,7 @@ public class Cell {
 
         if (name instanceof Root) {
             if (parent == null) {
-                return deliver(context, new Path(), message);
+                return deliver(context, target.rest(), message);
             }
 
             return parent.deliver(context.up(), target, message.in(context.last()));
@@ -102,5 +102,9 @@ public class Cell {
         }
 
         deliverToPeers(context, new Path(), message);
+    }
+
+    public Cell getParent() {
+        return parent;
     }
 }

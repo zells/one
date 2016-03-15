@@ -4,9 +4,7 @@ import org.zells.node.io.Server;
 import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Protocol;
-import org.zells.node.model.refer.Child;
-import org.zells.node.model.refer.Name;
-import org.zells.node.model.refer.Path;
+import org.zells.node.model.refer.*;
 
 import java.io.PrintStream;
 
@@ -96,11 +94,16 @@ public class Node implements Runnable, SignalListener {
         Path current = new Path();
 
         while (!path.isEmpty()) {
-            if (!cell.hasChild(path.first())) {
+            if (path.first() == Root.name()) {
+                cell = root;
+            } else if (path.first() == Parent.name()) {
+                cell = cell.getParent();
+            } else if (cell.hasChild(path.first())) {
+                cell = cell.getChild(path.first());
+            } else {
                 throw new Exception("Could not resolve [" + path + "] in [" + current + "]");
             }
 
-            cell = cell.getChild(path.first());
             current = current.with(path.first());
             path = path.rest();
         }

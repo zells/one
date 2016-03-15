@@ -3,6 +3,7 @@ package org.zells.node;
 import org.zells.node.io.SocketServer;
 import org.zells.node.model.Cell;
 import org.zells.node.model.refer.Path;
+import org.zells.node.model.refer.Root;
 import org.zells.node.model.respond.Response;
 
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class Launcher {
     private static class EchoMessage implements Response {
         @Override
         public void execute(Cell cell, Path context, Path message) {
-            cell.deliver(context, message, context);
+            cell.deliver(context, message, new Path(Root.name()));
         }
     }
 }

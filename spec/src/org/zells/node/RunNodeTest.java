@@ -67,6 +67,19 @@ public class RunNodeTest {
     }
 
     @Test
+    public void deliverToNonCanonicalPath() {
+        FakeResponse response = new FakeResponse();
+
+        Cell foo = root.createChild("foo");
+        Cell bar = foo.createChild("bar").setResponse(response);
+
+        server.receive(Protocol.deliver(Path.parse("root.*.foo.bar.^.^.foo"), Path.parse("^.foo.*.foo.bar"), Path.parse("message")));
+
+        assertEquals(Protocol.ok(), server.responded);
+        assertEquals(bar, response.executed);
+    }
+
+    @Test
     public void letJoinNewCell() {
         server.receive(Protocol.join(Path.parse("root.foo.bar"), "other.host", 1234));
         assertEquals(Protocol.ok(), server.responded);
