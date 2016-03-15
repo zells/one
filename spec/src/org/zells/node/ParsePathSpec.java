@@ -8,7 +8,7 @@ import org.zells.node.model.refer.Root;
 
 import static org.junit.Assert.assertEquals;
 
-public class ParsePathTest {
+public class ParsePathSpec {
 
     @Test
     public void emptyPath() {

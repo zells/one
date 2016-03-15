@@ -10,7 +10,7 @@ import org.zells.node.model.refer.Path;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-public class DeliverLocallyTest {
+public class DeliverLocallySpec {
 
     private TestReaction response;
 

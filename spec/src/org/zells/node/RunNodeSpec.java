@@ -15,7 +15,7 @@ import java.io.PrintStream;
 
 import static org.junit.Assert.assertEquals;
 
-public class RunNodeTest {
+public class RunNodeSpec {
 
     private String sent;
     private final PrintStream error = new PrintStream(new ByteArrayOutputStream());
