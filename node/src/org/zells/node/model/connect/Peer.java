@@ -1,4 +1,4 @@
-package org.zells.node.model.local;
+package org.zells.node.model.connect;
 
 public interface Peer {
 

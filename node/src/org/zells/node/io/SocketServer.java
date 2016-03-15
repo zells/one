@@ -1,7 +1,7 @@
 package org.zells.node.io;
 
-import org.zells.node.model.local.Peer;
-import org.zells.node.model.remote.Protocol;
+import org.zells.node.model.connect.Peer;
+import org.zells.node.model.connect.Protocol;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class SocketServer implements Server {
     public SocketServer(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
-        this.serverSocket = new ServerSocket(port);;
+        this.serverSocket = new ServerSocket(port);
     }
 
     @Override

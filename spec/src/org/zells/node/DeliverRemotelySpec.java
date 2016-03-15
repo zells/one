@@ -1,12 +1,12 @@
 package org.zells.node;
 
 import org.junit.Test;
-import org.zells.node.model.local.LocalCell;
-import org.zells.node.model.local.Peer;
-import org.zells.node.model.reference.Child;
-import org.zells.node.model.reference.Path;
-import org.zells.node.model.remote.Protocol;
-import org.zells.node.model.remote.RemoteCell;
+import org.zells.node.model.LocalCell;
+import org.zells.node.model.connect.Peer;
+import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.Path;
+import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.RemoteCell;
 
 import static org.junit.Assert.*;
 

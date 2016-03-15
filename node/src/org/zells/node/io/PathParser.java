@@ -1,6 +1,6 @@
 package org.zells.node.io;
 
-import org.zells.node.model.reference.*;
+import org.zells.node.model.refer.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;

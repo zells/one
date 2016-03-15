@@ -2,10 +2,10 @@ package org.zells.node;
 
 import org.zells.node.io.SocketServer;
 import org.zells.node.model.Cell;
-import org.zells.node.model.local.LocalCell;
-import org.zells.node.model.local.Response;
-import org.zells.node.model.reference.Child;
-import org.zells.node.model.reference.Path;
+import org.zells.node.model.LocalCell;
+import org.zells.node.model.respond.Response;
+import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.Path;
 
 import java.io.IOException;
 

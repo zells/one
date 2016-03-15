@@ -1,4 +1,4 @@
-package org.zells.node.model.reference;
+package org.zells.node.model.refer;
 
 import org.zells.node.io.PathParser;
 

@@ -4,12 +4,12 @@ import org.junit.Test;
 import org.zells.node.io.Server;
 import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
-import org.zells.node.model.local.LocalCell;
-import org.zells.node.model.local.Peer;
-import org.zells.node.model.local.Response;
-import org.zells.node.model.reference.Child;
-import org.zells.node.model.reference.Path;
-import org.zells.node.model.remote.Protocol;
+import org.zells.node.model.LocalCell;
+import org.zells.node.model.connect.Peer;
+import org.zells.node.model.respond.Response;
+import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.Path;
+import org.zells.node.model.connect.Protocol;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

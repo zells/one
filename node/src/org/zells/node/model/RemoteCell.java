@@ -1,10 +1,9 @@
-package org.zells.node.model.remote;
+package org.zells.node.model;
 
-import org.zells.node.model.Cell;
-import org.zells.node.model.local.LocalCell;
-import org.zells.node.model.local.Peer;
-import org.zells.node.model.reference.Name;
-import org.zells.node.model.reference.Path;
+import org.zells.node.model.connect.Peer;
+import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.refer.Name;
+import org.zells.node.model.refer.Path;
 
 import java.util.ArrayList;
 import java.util.List;

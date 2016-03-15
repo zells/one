@@ -1,4 +1,4 @@
-package org.zells.node.model.reference;
+package org.zells.node.model.refer;
 
 public class Root implements Name {
 

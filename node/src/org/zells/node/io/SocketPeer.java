@@ -1,7 +1,7 @@
 package org.zells.node.io;
 
-import org.zells.node.model.local.Peer;
-import org.zells.node.model.remote.Protocol;
+import org.zells.node.model.connect.Peer;
+import org.zells.node.model.connect.Protocol;
 
 import java.io.BufferedReader;
 import java.io.IOException;

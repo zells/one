@@ -1,7 +1,7 @@
-package org.zells.node.model.local;
+package org.zells.node.model.respond;
 
 import org.zells.node.model.Cell;
-import org.zells.node.model.reference.Path;
+import org.zells.node.model.refer.Path;
 
 public interface Response {
 

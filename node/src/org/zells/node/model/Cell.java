@@ -1,7 +1,6 @@
 package org.zells.node.model;
 
-import org.zells.node.model.local.LocalCell;
-import org.zells.node.model.reference.*;
+import org.zells.node.model.refer.*;
 
 public abstract class Cell {
 

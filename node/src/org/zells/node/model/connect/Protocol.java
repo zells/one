@@ -1,6 +1,6 @@
-package org.zells.node.model.remote;
+package org.zells.node.model.connect;
 
-import org.zells.node.model.reference.Path;
+import org.zells.node.model.refer.Path;
 
 public class Protocol {
 

@@ -1,10 +1,10 @@
 package org.zells.node;
 
 import org.junit.Test;
-import org.zells.node.model.reference.Child;
-import org.zells.node.model.reference.Parent;
-import org.zells.node.model.reference.Path;
-import org.zells.node.model.reference.Root;
+import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.Parent;
+import org.zells.node.model.refer.Path;
+import org.zells.node.model.refer.Root;
 
 import static org.junit.Assert.assertEquals;
 

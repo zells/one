@@ -1,6 +1,6 @@
 package org.zells.node.io;
 
-import org.zells.node.model.local.Peer;
+import org.zells.node.model.connect.Peer;
 
 public interface Server {
 

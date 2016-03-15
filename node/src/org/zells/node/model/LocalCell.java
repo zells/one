@@ -1,7 +1,7 @@
-package org.zells.node.model.local;
+package org.zells.node.model;
 
-import org.zells.node.model.Cell;
-import org.zells.node.model.reference.*;
+import org.zells.node.model.refer.*;
+import org.zells.node.model.respond.Response;
 
 import java.util.HashMap;
 import java.util.Map;
