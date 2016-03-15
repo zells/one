@@ -30,10 +30,17 @@ public class Path {
         return names.get(names.size() - 1);
     }
 
-    public Path with(Name Name) {
+    public Path with(Name name) {
+        if (name.equals(Parent.name()) && !isEmpty()) {
+            return up();
+        }
+        if (name.equals(Root.name())) {
+            return new Path(name);
+        }
+
         List<Name> newNames = new ArrayList<Name>(names.size() + 1);
-        for (Name name : names) newNames.add(name);
-        newNames.add(Name);
+        for (Name n : names) newNames.add(n);
+        newNames.add(name);
 
         return new Path(newNames);
     }
@@ -46,6 +53,9 @@ public class Path {
     }
 
     public Path up() {
+        if (names.size() == 1 && names.get(0) == Root.name()) {
+            return this;
+        }
         return new Path(names.subList(0, names.size() - 1));
     }
 

@@ -45,6 +45,26 @@ public class ParsePathTest {
         assertEquals(new Path(Child.name("foo"), Child.name("bar")), Path.parse("..foo..bar.."));
     }
 
+    @Test
+    public void withParent() {
+        assertEquals(Path.parse("foo"), Path.parse("foo.bar").with(Parent.name()));
+        assertEquals(Path.parse(""), Path.parse("foo").with(Parent.name()));
+        assertEquals(Path.parse("^"), Path.parse("").with(Parent.name()));
+    }
+
+    @Test
+    public void withRoot() {
+        assertEquals(Path.parse("*"), Path.parse("foo.bar").with(Root.name()));
+        assertEquals(Path.parse("*"), Path.parse("foo").with(Root.name()));
+        assertEquals(Path.parse("*"), Path.parse("").with(Root.name()));
+    }
+
+    @Test
+    public void upFromRoot() {
+        assertEquals(Path.parse("*"), Path.parse("*").with(Parent.name()));
+        assertEquals(Path.parse("*"), Path.parse("*").up());
+    }
+
     private void assertPath(Path path, String string) {
         assertEquals(path, Path.parse(string));
         assertEquals(string, path.toString());
