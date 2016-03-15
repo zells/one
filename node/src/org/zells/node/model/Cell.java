@@ -3,7 +3,7 @@ package org.zells.node.model;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
 import org.zells.node.model.refer.*;
-import org.zells.node.model.respond.Response;
+import org.zells.node.model.react.Reaction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import java.util.Map;
 public class Cell {
 
     private Cell parent;
-    private Response response;
+    private Reaction reaction;
     private Map<Name, Cell> children = new HashMap<Name, Cell>();
     private final List<Peer> peers = new ArrayList<Peer>();
 
@@ -24,8 +24,8 @@ public class Cell {
         this.parent = parent;
     }
 
-    public Cell setResponse(Response response) {
-        this.response = response;
+    public Cell setReaction(Reaction reaction) {
+        this.reaction = reaction;
         return this;
     }
 
@@ -96,8 +96,8 @@ public class Cell {
     }
 
     protected void execute(Path context, Path message) {
-        if (response != null) {
-            response.execute(this, context, message);
+        if (reaction != null) {
+            reaction.execute(this, context, message);
             return;
         }
 

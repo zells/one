@@ -3,7 +3,7 @@ package org.zells.node;
 import org.junit.Before;
 import org.junit.Test;
 import org.zells.node.model.Cell;
-import org.zells.node.model.respond.Response;
+import org.zells.node.model.react.Reaction;
 import org.zells.node.model.refer.Child;
 import org.zells.node.model.refer.Path;
 
@@ -12,11 +12,11 @@ import static org.junit.Assert.assertFalse;
 
 public class DeliverLocallyTest {
 
-    private TestResponse response;
+    private TestReaction response;
 
     @Before
     public void setUp() {
-        response = new TestResponse();
+        response = new TestReaction();
     }
 
     @Test
@@ -26,7 +26,7 @@ public class DeliverLocallyTest {
 
     @Test
     public void executeResponse() {
-        Cell root = new Cell().setResponse(response);
+        Cell root = new Cell().setReaction(response);
 
         root.deliver(
                 new Path(Child.name("foo")),
@@ -60,7 +60,7 @@ public class DeliverLocallyTest {
     @Test
     public void deliverToChild() {
         Cell root = new Cell();
-        Cell foo = root.createChild("foo").setResponse(response);
+        Cell foo = root.createChild("foo").setReaction(response);
 
         root.deliver(
                 Path.parse("me"),
@@ -76,8 +76,8 @@ public class DeliverLocallyTest {
     public void replaceChild() {
         Cell root = new Cell();
 
-        root.createChild("foo").setResponse(response);
-        Cell replaced = root.createChild("foo").setResponse(response);
+        root.createChild("foo").setReaction(response);
+        Cell replaced = root.createChild("foo").setReaction(response);
 
         root.deliver(
                 Path.parse("me"),
@@ -91,7 +91,7 @@ public class DeliverLocallyTest {
 
     @Test
     public void deliverToParent() {
-        Cell root = new Cell().setResponse(response);
+        Cell root = new Cell().setReaction(response);
         Cell foo = root.createChild("foo");
 
         foo.deliver(
@@ -106,7 +106,7 @@ public class DeliverLocallyTest {
 
     @Test
     public void deliverToRoot() {
-        Cell root = new Cell().setResponse(response);
+        Cell root = new Cell().setReaction(response);
         Cell foo = root.createChild("foo");
         Cell bar = foo.createChild("bar");
 
@@ -120,7 +120,7 @@ public class DeliverLocallyTest {
         assertEquals(Path.parse("two.three.message"), response.message);
     }
 
-    private class TestResponse implements Response {
+    private class TestReaction implements Reaction {
         public Path message;
         public Cell cell;
         public Path context;

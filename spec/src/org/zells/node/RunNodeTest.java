@@ -8,7 +8,7 @@ import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
 import org.zells.node.model.refer.Path;
-import org.zells.node.model.respond.Response;
+import org.zells.node.model.react.Reaction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -55,10 +55,10 @@ public class RunNodeTest {
 
     @Test
     public void deliverMessage() {
-        FakeResponse response = new FakeResponse();
+        FakeReaction response = new FakeReaction();
 
         Cell cell = root.createChild("foo");
-        Cell child = cell.createChild("bar").setResponse(response);
+        Cell child = cell.createChild("bar").setReaction(response);
 
         server.receive(Protocol.deliver(Path.parse("root.foo"), Path.parse("bar"), Path.parse("message")));
 
@@ -68,10 +68,10 @@ public class RunNodeTest {
 
     @Test
     public void deliverToNonCanonicalPath() {
-        FakeResponse response = new FakeResponse();
+        FakeReaction response = new FakeReaction();
 
         Cell foo = root.createChild("foo");
-        Cell bar = foo.createChild("bar").setResponse(response);
+        Cell bar = foo.createChild("bar").setReaction(response);
 
         server.receive(Protocol.deliver(Path.parse("root.*.foo.bar.^.^.foo"), Path.parse("^.foo.*.foo.bar"), Path.parse("message")));
 
@@ -136,7 +136,7 @@ public class RunNodeTest {
         }
     }
 
-    private class FakeResponse implements Response {
+    private class FakeReaction implements Reaction {
         public Cell executed;
 
         @Override
