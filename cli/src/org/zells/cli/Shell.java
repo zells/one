@@ -4,6 +4,7 @@ import org.zells.node.Node;
 import org.zells.node.io.SocketPeer;
 import org.zells.node.io.SocketServer;
 import org.zells.node.model.Cell;
+import org.zells.node.model.react.Mailing;
 import org.zells.node.model.refer.Child;
 import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.Root;
@@ -18,7 +19,7 @@ import java.security.SecureRandom;
 public class Shell {
 
     public static final String PROMPT = "z$ ";
-    private final String self;
+    private final Path self;
     private final Cell root;
     private final String host;
     private final int port;
@@ -32,7 +33,7 @@ public class Shell {
         root.join(new SocketPeer(remoteHost, remotePort), myPath, host, port);
         root.putChild(name, new PrintMessage(root, System.out));
 
-        self = name;
+        self = Path.parse(name).in(Root.name());
     }
 
     public static void main(String[] args) throws Exception {
@@ -53,40 +54,26 @@ public class Shell {
 
         String input;
         while ((input = in.readLine()) != null) {
-            final Path[] targetMessage = parseInput(input);
+            try {
+                final Mailing mailing = Mailing.parse(input);
 
-            if (targetMessage.length == 2) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        if (!root.deliver(new Path(Root.name()), targetMessage[0], targetMessage[1])) {
+                        Path target = mailing.getTarget().in(self);
+                        Path message = mailing.getMessage().in(self);
+
+                        if (!root.deliver(new Path(Root.name()), target, message)) {
                             System.err.println();
-                            System.err.println("Deliver failed: " + targetMessage[0] + " " + targetMessage[1]);
+                            System.err.println("Deliver failed: " + target + " " + message);
                             System.err.print(PROMPT);
                         }
                     }
                 }).start();
+            } catch (Exception ignored) {
             }
+
             out.print(PROMPT);
         }
-    }
-
-    private Path[] parseInput(String input) {
-        String[] targetMessageStrings = input.split(" ");
-
-        String target = targetMessageStrings[0];
-        if (target.isEmpty()) {
-            return new Path[0];
-        }
-
-        Path message = Path.parse(self);
-        if (targetMessageStrings.length > 1) {
-            message = message.with(Path.parse(targetMessageStrings[1]));
-        }
-
-        return new Path[]{
-                Path.parse(target),
-                message
-        };
     }
 }

@@ -78,7 +78,7 @@ public class Path {
     }
 
     public static Path parse(String string) {
-        return PathParser.parse(string);
+        return PathParser.parseOne(string);
     }
 
     @Override

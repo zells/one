@@ -7,8 +7,8 @@ import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
-import org.zells.node.model.refer.Path;
 import org.zells.node.model.react.Reaction;
+import org.zells.node.model.refer.Path;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -82,12 +82,6 @@ public class RunNodeSpec {
         root.deliver(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message"));
         assertEquals(Protocol.deliver(Path.parse("root.foo.bar.baz"), Path.parse("root.message")) +
                 " -> other.host:1234", sent);
-    }
-
-    @Test
-    public void nonCanonicalPath() {
-        server.receive(Protocol.join(Path.parse("root.foo.^.bar"), "other.host", 1234));
-        assertEquals(Protocol.fail("Malformed signal: path not canonical."), server.responded);
     }
 
     @Test

@@ -1,6 +1,9 @@
 package org.zells.node.model.connect;
 
+import org.zells.node.io.PathParser;
 import org.zells.node.model.refer.Path;
+
+import java.util.List;
 
 public class Protocol {
 
@@ -26,10 +29,10 @@ public class Protocol {
     }
 
     public static Object[] parseDeliver(String signal) throws Exception {
-        String[] parts = split(signal, 2);
+        List<Path> parts = parse(signal, 2);
         return new Object[]{
-                Path.parse(parts[1]),
-                Path.parse(parts[2])
+                parts.get(0),
+                parts.get(1)
         };
     }
 
@@ -42,19 +45,19 @@ public class Protocol {
     }
 
     public static Object[] parseJoin(String signal) throws Exception {
-        String[] parts = split(signal, 3);
+        List<Path> parts = parse(signal, 3);
         return new Object[]{
-                Path.parse(parts[1]),
-                parts[2],
-                Integer.parseInt(parts[3])
+                parts.get(0),
+                parts.get(1).toString(),
+                Integer.parseInt(parts.get(2).toString())
         };
     }
 
-    private static String[] split(String signal, int argumentCount) throws Exception {
-        String[] parts = signal.split(" ");
-        if (parts.length != argumentCount + 1) {
+    private static List<Path> parse(String signal, int argumentCount) throws Exception {
+        List<Path> paths = PathParser.parse(signal);
+        if (paths.size() != argumentCount + 1) {
             throw new Exception("Malformed signal");
         }
-        return parts;
+        return paths.subList(1, paths.size());
     }
 }

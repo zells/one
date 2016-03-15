@@ -36,8 +36,21 @@ public class ParsePathSpec {
     }
 
     @Test
-    public void escapedName() {
-        assertPath(new Path(Child.name("fo\\o.bar's"), Child.name("baz")), "'fo\\\\o.bar\\'s'.baz");
+    public void escaped() {
+        assertPath(new Path(Child.name("foobar")), "foo\\bar", "foobar");
+        assertPath(new Path(Child.name("foo.bar")), "foo\\.bar", "'foo.bar'");
+        assertPath(new Path(Child.name("foo bar")), "foo\\ bar", "'foo bar'");
+        assertPath(new Path(Child.name("foo'bar")), "foo\\'bar", "'foo\\'bar'");
+        assertPath(new Path(Child.name("foo\"bar")), "foo\\\"bar", "'foo\"bar'");
+    }
+
+    @Test
+    public void quoted() {
+        assertPath(new Path(Child.name("foobar")), "'foobar'", "foobar");
+        assertPath(new Path(Child.name("foo.bar")), "'foo.bar'");
+        assertPath(new Path(Child.name("foo bar")),"'foo bar'");
+        assertPath(new Path(Child.name("foo'bar")), "\"foo'bar\"", "'foo\\'bar'");
+        assertPath(new Path(Child.name("foo\"bar")), "'foo\"bar'");
     }
 
     @Test
@@ -67,7 +80,11 @@ public class ParsePathSpec {
     }
 
     private void assertPath(Path path, String string) {
-        assertEquals(path, Path.parse(string));
-        assertEquals(string, path.toString());
+        assertPath(path, string, string);
+    }
+
+    private void assertPath(Path path, String string, String back) {
+        assertEquals("Parsing", path, Path.parse(string));
+        assertEquals("Serialization", back, path.toString());
     }
 }
