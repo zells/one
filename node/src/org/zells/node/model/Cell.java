@@ -29,8 +29,10 @@ public class Cell {
         return this;
     }
 
-    public void putChild(Child name, Cell child) {
-        children.put(name, child);
+    public Cell createChild(String name) {
+        Cell child = new Cell(this);
+        children.put(Child.name(name), child);
+        return child;
     }
 
     public boolean hasChild(Name name) {

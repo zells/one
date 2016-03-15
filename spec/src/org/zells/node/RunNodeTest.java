@@ -7,7 +7,6 @@ import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
-import org.zells.node.model.refer.Child;
 import org.zells.node.model.refer.Path;
 import org.zells.node.model.respond.Response;
 
@@ -58,10 +57,8 @@ public class RunNodeTest {
     public void deliverMessage() {
         FakeResponse response = new FakeResponse();
 
-        Cell cell = new Cell(root);
-        root.putChild(Child.name("foo"), cell);
-        Cell child = new Cell(cell).setResponse(response);
-        cell.putChild(Child.name("bar"), child);
+        Cell cell = root.createChild("foo");
+        Cell child = cell.createChild("bar").setResponse(response);
 
         server.receive(Protocol.deliver(Path.parse("root.foo"), Path.parse("bar"), Path.parse("message")));
 
@@ -87,8 +84,7 @@ public class RunNodeTest {
 
     @Test
     public void letJoinExistingCell() {
-        Cell cell = new Cell(root);
-        root.putChild(Child.name("foo"), cell);
+        root.createChild("foo");
 
         server.receive(Protocol.join(Path.parse("root.foo"), "other.host", 1234));
         assertEquals(Protocol.ok(), server.responded);

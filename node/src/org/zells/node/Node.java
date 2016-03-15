@@ -62,9 +62,7 @@ public class Node implements SignalListener {
             if (cell.hasChild(name)) {
                 cell = cell.getChild(name);
             } else if (name instanceof Child) {
-                Cell child = new Cell(cell);
-                cell.putChild((Child) name, child);
-                cell = child;
+                cell = cell.createChild(name.toString());
             } else {
                 throw new Exception("Malformed signal: path not canonical.");
             }

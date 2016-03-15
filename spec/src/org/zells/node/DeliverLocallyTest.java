@@ -26,14 +26,14 @@ public class DeliverLocallyTest {
 
     @Test
     public void executeResponse() {
-        Cell cell = new Cell().setResponse(response);
+        Cell root = new Cell().setResponse(response);
 
-        cell.deliver(
+        root.deliver(
                 new Path(Child.name("foo")),
                 new Path(),
                 new Path(Child.name("bar")));
 
-        assertEquals(cell, response.cell);
+        assertEquals(root, response.cell);
         assertEquals(Path.parse("foo"), response.context);
         assertEquals(Path.parse("bar"), response.message);
     }
@@ -48,10 +48,10 @@ public class DeliverLocallyTest {
 
     @Test
     public void wrongChild() {
-        Cell cell = new Cell();
-        cell.putChild(Child.name("foo"), new Cell(cell));
+        Cell root = new Cell();
+        root.createChild("foo");
 
-        assertFalse(cell.deliver(
+        assertFalse(root.deliver(
                 new Path(),
                 Path.parse("bar"),
                 new Path()));
@@ -59,30 +59,27 @@ public class DeliverLocallyTest {
 
     @Test
     public void deliverToChild() {
-        Cell cell = new Cell();
-        Cell child = new Cell(cell).setResponse(response);
+        Cell root = new Cell();
+        Cell foo = root.createChild("foo").setResponse(response);
 
-        cell.putChild(Child.name("foo"), child);
-        cell.deliver(
+        root.deliver(
                 Path.parse("me"),
                 Path.parse("foo"),
                 Path.parse("message"));
 
-        assertEquals(child, response.cell);
+        assertEquals(foo, response.cell);
         assertEquals(Path.parse("me.foo"), response.context);
         assertEquals(Path.parse("^.message"), response.message);
     }
 
     @Test
     public void replaceChild() {
-        Cell cell = new Cell();
-        Cell child = new Cell(cell).setResponse(response);
-        Cell replaced = new Cell(cell).setResponse(response);
+        Cell root = new Cell();
 
-        cell.putChild(Child.name("foo"), child);
-        cell.putChild(Child.name("foo"), replaced);
+        root.createChild("foo").setResponse(response);
+        Cell replaced = root.createChild("foo").setResponse(response);
 
-        cell.deliver(
+        root.deliver(
                 Path.parse("me"),
                 Path.parse("foo"),
                 Path.parse("message"));
@@ -94,16 +91,15 @@ public class DeliverLocallyTest {
 
     @Test
     public void deliverToParent() {
-        Cell cell = new Cell().setResponse(response);
-        Cell child = new Cell(cell);
+        Cell root = new Cell().setResponse(response);
+        Cell foo = root.createChild("foo");
 
-        cell.putChild(Child.name("foo"), child);
-        child.deliver(
+        foo.deliver(
                 Path.parse("parent.child"),
                 Path.parse("^"),
                 Path.parse("message"));
 
-        assertEquals(cell, response.cell);
+        assertEquals(root, response.cell);
         assertEquals(Path.parse("parent"), response.context);
         assertEquals(Path.parse("child.message"), response.message);
     }
@@ -111,13 +107,10 @@ public class DeliverLocallyTest {
     @Test
     public void deliverToRoot() {
         Cell root = new Cell().setResponse(response);
-        Cell cell = new Cell(root);
-        Cell child = new Cell(cell);
+        Cell foo = root.createChild("foo");
+        Cell bar = foo.createChild("bar");
 
-        root.putChild(Child.name("foo"), cell);
-        cell.putChild(Child.name("bar"), child);
-
-        child.deliver(
+        bar.deliver(
                 Path.parse("one.two.three"),
                 Path.parse("*"),
                 Path.parse("message"));
