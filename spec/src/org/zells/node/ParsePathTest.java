@@ -49,6 +49,7 @@ public class ParsePathTest {
     public void withParent() {
         assertEquals(Path.parse("foo"), Path.parse("foo.bar").with(Parent.name()));
         assertEquals(Path.parse(""), Path.parse("foo").with(Parent.name()));
+        assertEquals(Path.parse("^.^"), Path.parse("^").with(Parent.name()));
         assertEquals(Path.parse("^"), Path.parse("").with(Parent.name()));
     }
 

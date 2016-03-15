@@ -23,7 +23,7 @@ public class Launcher {
     private static class EchoMessage implements Response {
         @Override
         public void execute(Cell cell, Path context, Path message) {
-            cell.deliver(context, message, message);
+            cell.deliver(context, message, context);
         }
     }
 }

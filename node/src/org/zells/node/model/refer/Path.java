@@ -31,7 +31,7 @@ public class Path {
     }
 
     public Path with(Name name) {
-        if (name.equals(Parent.name()) && !isEmpty()) {
+        if (name.equals(Parent.name()) && !isEmpty() && last() != Parent.name()) {
             return up();
         }
         if (name.equals(Root.name())) {
@@ -45,6 +45,12 @@ public class Path {
         return new Path(newNames);
     }
 
+    public Path with(Path path) {
+        Path newPath = this;
+        for (Name n : path.names) newPath = newPath.with(n);
+        return newPath;
+    }
+
     public Path rest() {
         if (names.size() == 1) {
             return new Path();
@@ -53,7 +59,7 @@ public class Path {
     }
 
     public Path up() {
-        if (names.size() == 1 && names.get(0) == Root.name()) {
+        if (last() == Root.name()) {
             return this;
         }
         return new Path(names.subList(0, names.size() - 1));
@@ -64,11 +70,7 @@ public class Path {
     }
 
     public Path in(Path context) {
-        List<Name> newNames = new ArrayList<Name>(names.size() + 1);
-        for (Name name : context.names) newNames.add(name);
-        for (Name name : names) newNames.add(name);
-
-        return new Path(newNames);
+        return context.with(this);
     }
 
     public boolean isEmpty() {

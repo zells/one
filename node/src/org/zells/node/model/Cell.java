@@ -30,7 +30,10 @@ public class Cell {
     }
 
     public Cell createChild(String name) {
-        Cell child = new Cell(this);
+        return putChild(name, new Cell(this));
+    }
+
+    public Cell putChild(String name, Cell child) {
         children.put(Child.name(name), child);
         return child;
     }

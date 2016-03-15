@@ -30,7 +30,7 @@ public class Shell {
 
         root = new Cell();
         root.join(new SocketPeer(remoteHost, remotePort), myPath, host, port);
-        root.createChild(name).setResponse(new PrintMessage(System.out));
+        root.putChild(name, new PrintMessage(root, System.out));
 
         self = name;
     }
@@ -79,14 +79,14 @@ public class Shell {
             return new Path[0];
         }
 
-        String message = self;
+        Path message = Path.parse(self);
         if (targetMessageStrings.length > 1) {
-            message = targetMessageStrings[1];
+            message = message.with(Path.parse(targetMessageStrings[1]));
         }
 
         return new Path[]{
                 Path.parse(target),
-                Path.parse(message)
+                message
         };
     }
 }
