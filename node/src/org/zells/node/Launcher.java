@@ -2,6 +2,8 @@ package org.zells.node;
 
 import org.zells.node.io.SocketServer;
 import org.zells.node.model.Cell;
+import org.zells.node.model.refer.Path;
+import org.zells.node.model.respond.Response;
 
 import java.io.IOException;
 
@@ -9,8 +11,19 @@ public class Launcher {
 
     public static void main(String[] args) throws IOException {
         Cell root = new Cell();
-        root.createChild("foo");
+        root.createChild("echo").setResponse(new EchoMessage());
 
-        new Node(root, new SocketServer("localhost", 12345)).run();
+        String host = "localhost";
+        int port = 12345;
+
+        System.out.println("Listening on " + port);
+        new Node(root, new SocketServer(host, port)).run();
+    }
+
+    private static class EchoMessage implements Response {
+        @Override
+        public void execute(Cell cell, Path context, Path message) {
+            cell.deliver(context, message, message);
+        }
     }
 }

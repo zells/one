@@ -24,7 +24,6 @@ public class SocketServer implements Server {
 
     @Override
     public void listen(SignalListener listener) {
-        System.out.println("Listening on " + port);
         while (true) {
             try {
                 new Thread(new SignalWorker(listener, serverSocket.accept())).run();
@@ -66,7 +65,9 @@ public class SocketServer implements Server {
         @Override
         public void run() {
             try {
-                out.println(listener.respondTo(in.readLine()));
+                String signal = in.readLine();
+                String response = listener.respondTo(signal);
+                out.println(response);
             } catch (IOException e) {
                 out.println(Protocol.fail(e.getMessage()));
                 e.printStackTrace();
