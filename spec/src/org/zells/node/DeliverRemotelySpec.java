@@ -1,38 +1,36 @@
 package org.zells.node;
 
 import org.junit.Test;
-import org.zells.node.model.LocalCell;
+import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.refer.Child;
 import org.zells.node.model.refer.Path;
 import org.zells.node.model.connect.Protocol;
-import org.zells.node.model.RemoteCell;
 
 import static org.junit.Assert.*;
 
 public class DeliverRemotelySpec {
 
     @Test
-    public void joinPeers() {
-        LocalCell root = new LocalCell();
-        LocalCell cell = new LocalCell(root);
-        root.setChild(Child.name("foo"), cell);
+    public void joinPeers() {Cell root = new Cell();
+        Cell cell = new Cell(root);
+        root.putChild(Child.name("foo"), cell);
 
         FakePeer peer = new FakePeer();
-        RemoteCell remoteCell = new RemoteCell(cell, "example.com", 1234);
-        cell.setChild(Child.name("bar"), remoteCell);
-        remoteCell.join(peer);
+        Cell Cell = new Cell(cell);
+        cell.putChild(Child.name("bar"), Cell);
+        Cell.join(peer, Path.parse("some.path"), "example.com", 1234);
 
-        assertEquals(Protocol.join(Path.parse("*.foo.bar"), "example.com", 1234), peer.sent);
+        assertEquals(Protocol.join(Path.parse("some.path"), "example.com", 1234), peer.sent);
     }
 
     @Test
     public void doNotJoinBack() {
-        LocalCell cell = new LocalCell();
+        Cell cell = new Cell();
 
         FakePeer peer = new FakePeer();
-        RemoteCell remoteCell = new RemoteCell(cell, "example.com", 1234);
-        cell.setChild(Child.name("foo"), remoteCell);
+        Cell remoteCell = new Cell(cell);
+        cell.putChild(Child.name("foo"), remoteCell);
         remoteCell.joinedBy(peer);
 
         assertNull(peer.sent);
@@ -42,11 +40,11 @@ public class DeliverRemotelySpec {
 
     @Test
     public void executeWithPeer() {
-        LocalCell cell = new LocalCell();
+        Cell cell = new Cell();
         FakePeer peer = new FakePeer();
-        RemoteCell remote = new RemoteCell(cell, "example.com", 12345);
-        cell.setChild(Child.name("foo"), remote);
-        remote.join(peer);
+        Cell remote = new Cell(cell);
+        cell.putChild(Child.name("foo"), remote);
+        remote.joinedBy(peer);
 
         assertTrue(cell.deliver(Path.parse("context"), Path.parse("foo"), Path.parse("message")));
         assertEquals(Protocol.deliver(Path.parse("context.foo"), new Path(), Path.parse("^.message")), peer.sent);
@@ -54,11 +52,11 @@ public class DeliverRemotelySpec {
 
     @Test
     public void deliverToPeer() {
-        LocalCell cell = new LocalCell();
+        Cell cell = new Cell();
         FakePeer peer = new FakePeer();
-        RemoteCell remote = new RemoteCell(cell, "example.com", 12345);
-        cell.setChild(Child.name("foo"), remote);
-        remote.join(peer);
+        Cell remote = new Cell(cell);
+        cell.putChild(Child.name("foo"), remote);
+        remote.joinedBy(peer);
 
         assertTrue(cell.deliver(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message")));
         assertEquals(Protocol.deliver(Path.parse("context.foo"), Path.parse("bar"), Path.parse("^.message")), peer.sent);
@@ -69,10 +67,11 @@ public class DeliverRemotelySpec {
         FakePeer one = new FakePeer(Protocol.fail("foo"));
         FakePeer two = new FakePeer();
 
-        LocalCell cell = new LocalCell();
-        RemoteCell remote = new RemoteCell(cell, "example.com", 12345);
-        cell.setChild(Child.name("foo"), remote);
-        remote.join(one).join(two);
+        Cell cell = new Cell();
+        Cell remote = new Cell(cell);
+        cell.putChild(Child.name("foo"), remote);
+        remote.joinedBy(one);
+        remote.joinedBy(two);
 
         assertTrue(cell.deliver(Path.parse("context"), Path.parse("foo"), Path.parse("message")));
 
@@ -85,10 +84,11 @@ public class DeliverRemotelySpec {
         FakePeer one = new FakePeer(Protocol.fail("foo"));
         FakePeer two = new FakePeer();
 
-        LocalCell cell = new LocalCell();
-        RemoteCell remote = new RemoteCell(cell, "example.com", 12345);
-        cell.setChild(Child.name("foo"), remote);
-        remote.join(one).join(two);
+        Cell cell = new Cell();
+        Cell remote = new Cell(cell);
+        cell.putChild(Child.name("foo"), remote);
+        remote.joinedBy(one);
+        remote.joinedBy(two);
 
         assertTrue(cell.deliver(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message")));
 
@@ -100,10 +100,10 @@ public class DeliverRemotelySpec {
     public void cannotDeliver() {
         FakePeer peer = new FakePeer(Protocol.fail("foo"));
 
-        LocalCell cell = new LocalCell();
-        RemoteCell remote = new RemoteCell(cell, "example.com", 12345);
-        cell.setChild(Child.name("foo"), remote);
-        remote.join(peer);
+        Cell cell = new Cell();
+        Cell remote = new Cell(cell);
+        cell.putChild(Child.name("foo"), remote);
+        remote.joinedBy(peer);
 
         assertFalse(cell.deliver(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message")));
     }

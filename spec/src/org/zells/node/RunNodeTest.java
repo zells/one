@@ -1,15 +1,15 @@
 package org.zells.node;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.zells.node.io.Server;
 import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
-import org.zells.node.model.LocalCell;
 import org.zells.node.model.connect.Peer;
-import org.zells.node.model.respond.Response;
+import org.zells.node.model.connect.Protocol;
 import org.zells.node.model.refer.Child;
 import org.zells.node.model.refer.Path;
-import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.respond.Response;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -19,71 +19,50 @@ import static org.junit.Assert.assertEquals;
 public class RunNodeTest {
 
     private String sent;
+    private final PrintStream error = new PrintStream(new ByteArrayOutputStream());
+    private FakeServer server;
+    private Cell root;
+
+    @Before
+    public void setUp() {
+        root = new Cell();
+        server = new FakeServer();
+        new Node(root, server).setErrorStream(error).run();
+    }
 
     @Test
     public void unknownSignal() {
-        FakeServer server = new FakeServer();
-
-        new Node(new LocalCell(), server)
-                .setErrorStream(new PrintStream(new ByteArrayOutputStream()))
-                .run();
         server.receive("foo");
-
         assertEquals(Protocol.fail("Unknown signal"), server.responded);
     }
 
     @Test
     public void malformedSignal() {
-        FakeServer server = new FakeServer();
-
-        new Node(new LocalCell(), server)
-                .setErrorStream(new PrintStream(new ByteArrayOutputStream()))
-                .run();
         server.receive("DELIVER foo");
-
         assertEquals(Protocol.fail("Malformed signal"), server.responded);
     }
 
     @Test
     public void cannotDeliver() {
-        FakeServer server = new FakeServer();
-        LocalCell root = new LocalCell();
-
-        new Node(root, server)
-                .setErrorStream(new PrintStream(new ByteArrayOutputStream()))
-                .run();
-        server.receive(Protocol.deliver(new Path(), Path.parse("foo"), Path.parse("message")));
-
+        server.receive(Protocol.deliver(Path.parse("*"), Path.parse("foo"), Path.parse("message")));
         assertEquals(Protocol.fail("Delivery failed"), server.responded);
     }
 
     @Test
     public void deliverMessageWithoutContext() {
-        FakeServer server = new FakeServer();
-        FakeResponse response = new FakeResponse();
-        LocalCell root = new LocalCell();
-        Cell cell = new LocalCell(root).setResponse(response);
-        root.setChild(Child.name("foo"), cell);
-
-        new Node(root, server).run();
         server.receive(Protocol.deliver(new Path(), Path.parse("foo"), Path.parse("message")));
-
-        assertEquals(Protocol.ok(), server.responded);
-        assertEquals(cell, response.executed);
+        assertEquals(Protocol.fail("Malformed signal: empty context."), server.responded);
     }
 
     @Test
-    public void deliverMessageWithContext() {
-        FakeServer server = new FakeServer();
+    public void deliverMessage() {
         FakeResponse response = new FakeResponse();
 
-        LocalCell root = new LocalCell();
-        LocalCell cell = new LocalCell(root);
-        root.setChild(Child.name("foo"), cell);
-        LocalCell child = new LocalCell(cell).setResponse(response);
-        cell.setChild(Child.name("bar"), child);
+        Cell cell = new Cell(root);
+        root.putChild(Child.name("foo"), cell);
+        Cell child = new Cell(cell).setResponse(response);
+        cell.putChild(Child.name("bar"), child);
 
-        new Node(root, server).run();
         server.receive(Protocol.deliver(Path.parse("root.foo"), Path.parse("bar"), Path.parse("message")));
 
         assertEquals(Protocol.ok(), server.responded);
@@ -91,20 +70,31 @@ public class RunNodeTest {
     }
 
     @Test
-    public void letPeersJoin() {
-        FakeServer server = new FakeServer();
-
-        LocalCell root = new LocalCell();
-        LocalCell cell = new LocalCell(root);
-        root.setChild(Child.name("foo"), cell);
-
-        new Node(root, server).run();
+    public void letJoinNewCell() {
         server.receive(Protocol.join(Path.parse("root.foo.bar"), "other.host", 1234));
-
         assertEquals(Protocol.ok(), server.responded);
 
-        cell.deliver(Path.parse("root.foo"), Path.parse("bar.baz"), Path.parse("message"));
-        assertEquals(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("baz"), Path.parse("^.message")) +
+        root.deliver(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message"));
+        assertEquals(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("baz"), Path.parse("^.^.message")) +
+                " -> other.host:1234", sent);
+    }
+
+    @Test
+    public void nonCanonicalPath() {
+        server.receive(Protocol.join(Path.parse("root.foo.^.bar"), "other.host", 1234));
+        assertEquals(Protocol.fail("Malformed signal: path not canonical."), server.responded);
+    }
+
+    @Test
+    public void letJoinExistingCell() {
+        Cell cell = new Cell(root);
+        root.putChild(Child.name("foo"), cell);
+
+        server.receive(Protocol.join(Path.parse("root.foo"), "other.host", 1234));
+        assertEquals(Protocol.ok(), server.responded);
+
+        root.deliver(Path.parse("root"), Path.parse("foo.bar"), Path.parse("message"));
+        assertEquals(Protocol.deliver(Path.parse("root.foo"), Path.parse("bar"), Path.parse("^.message")) +
                 " -> other.host:1234", sent);
     }
 

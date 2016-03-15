@@ -3,11 +3,10 @@ package org.zells.node;
 import org.zells.node.io.Server;
 import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
-import org.zells.node.model.LocalCell;
-import org.zells.node.model.refer.Child;
-import org.zells.node.model.refer.Path;
 import org.zells.node.model.connect.Protocol;
-import org.zells.node.model.RemoteCell;
+import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.Name;
+import org.zells.node.model.refer.Path;
 
 import java.io.PrintStream;
 
@@ -51,15 +50,30 @@ public class Node implements SignalListener {
         throw new Exception("Unknown signal");
     }
 
-    private String handleJoin(Object[] parameters) {
+    private String handleJoin(Object[] parameters) throws Exception {
         Path path = (Path) parameters[0];
 
-        LocalCell parent = root.resolve(path.rest().up());
-        RemoteCell remote = new RemoteCell(parent, server.getHost(), server.getPort());
+        Cell cell = root;
+        Path current = new Path(path.first());
+        path = path.rest();
+        while (!path.isEmpty()) {
+            Name name = path.first();
 
-        parent.setChild((Child)path.last(), remote);
-        remote.joinedBy(server.makePeer((String)parameters[1], (Integer)parameters[2]));
+            if (cell.hasChild(name)) {
+                cell = cell.getChild(name);
+            } else if (name instanceof Child) {
+                Cell child = new Cell(cell);
+                cell.putChild((Child) name, child);
+                cell = child;
+            } else {
+                throw new Exception("Malformed signal: path not canonical.");
+            }
 
+            current = current.with(name);
+            path = path.rest();
+        }
+
+        cell.joinedBy(server.makePeer((String) parameters[1], (Integer) parameters[2]));
         return Protocol.ok();
     }
 
@@ -68,15 +82,31 @@ public class Node implements SignalListener {
         Path target = (Path) parameters[1];
         Path message = (Path) parameters[2];
 
-        Cell cell = root;
-        if (!context.isEmpty()) {
-            cell = root.resolve(context.rest());
+        if (context.isEmpty()) {
+            throw new Exception("Malformed signal: empty context.");
         }
 
+        Cell cell = resolve(context.rest(), root);
         if (cell.deliver(context, target, message)) {
             return Protocol.ok();
         }
 
         throw new Exception("Delivery failed");
+    }
+
+    private Cell resolve(Path path, Cell cell) throws Exception {
+        Path current = new Path();
+
+        while (!path.isEmpty()) {
+            if (!cell.hasChild(path.first())) {
+                throw new Exception("Could not resolve [" + path + "] in [" + current + "]");
+            }
+
+            cell = cell.getChild(path.first());
+            current = current.with(path.first());
+            path = path.rest();
+        }
+
+        return cell;
     }
 }

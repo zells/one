@@ -3,7 +3,6 @@ package org.zells.node;
 import org.junit.Before;
 import org.junit.Test;
 import org.zells.node.model.Cell;
-import org.zells.node.model.LocalCell;
 import org.zells.node.model.respond.Response;
 import org.zells.node.model.refer.Child;
 import org.zells.node.model.refer.Path;
@@ -22,12 +21,12 @@ public class DeliverLocallyTest {
 
     @Test
     public void noResponse() {
-        new LocalCell().deliver(new Path(), new Path(), new Path());
+        new Cell().deliver(new Path(), new Path(), new Path());
     }
 
     @Test
     public void executeResponse() {
-        LocalCell cell = new LocalCell().setResponse(response);
+        Cell cell = new Cell().setResponse(response);
 
         cell.deliver(
                 new Path(Child.name("foo")),
@@ -41,7 +40,7 @@ public class DeliverLocallyTest {
 
     @Test
     public void noChildren() {
-        assertFalse(new LocalCell().deliver(
+        assertFalse(new Cell().deliver(
                 new Path(),
                 Path.parse("foo"),
                 new Path()));
@@ -49,8 +48,8 @@ public class DeliverLocallyTest {
 
     @Test
     public void wrongChild() {
-        LocalCell cell = new LocalCell();
-        cell.setChild(Child.name("foo"), new LocalCell(cell));
+        Cell cell = new Cell();
+        cell.putChild(Child.name("foo"), new Cell(cell));
 
         assertFalse(cell.deliver(
                 new Path(),
@@ -60,10 +59,10 @@ public class DeliverLocallyTest {
 
     @Test
     public void deliverToChild() {
-        LocalCell cell = new LocalCell();
-        LocalCell child = new LocalCell(cell).setResponse(response);
+        Cell cell = new Cell();
+        Cell child = new Cell(cell).setResponse(response);
 
-        cell.setChild(Child.name("foo"), child);
+        cell.putChild(Child.name("foo"), child);
         cell.deliver(
                 Path.parse("me"),
                 Path.parse("foo"),
@@ -76,12 +75,12 @@ public class DeliverLocallyTest {
 
     @Test
     public void replaceChild() {
-        LocalCell cell = new LocalCell();
-        LocalCell child = new LocalCell(cell).setResponse(response);
-        LocalCell replaced = new LocalCell(cell).setResponse(response);
+        Cell cell = new Cell();
+        Cell child = new Cell(cell).setResponse(response);
+        Cell replaced = new Cell(cell).setResponse(response);
 
-        cell.setChild(Child.name("foo"), child);
-        cell.setChild(Child.name("foo"), replaced);
+        cell.putChild(Child.name("foo"), child);
+        cell.putChild(Child.name("foo"), replaced);
 
         cell.deliver(
                 Path.parse("me"),
@@ -95,10 +94,10 @@ public class DeliverLocallyTest {
 
     @Test
     public void deliverToParent() {
-        LocalCell cell = new LocalCell().setResponse(response);
-        LocalCell child = new LocalCell(cell);
+        Cell cell = new Cell().setResponse(response);
+        Cell child = new Cell(cell);
 
-        cell.setChild(Child.name("foo"), child);
+        cell.putChild(Child.name("foo"), child);
         child.deliver(
                 Path.parse("parent.child"),
                 Path.parse("^"),
@@ -111,12 +110,12 @@ public class DeliverLocallyTest {
 
     @Test
     public void deliverToRoot() {
-        LocalCell root = new LocalCell().setResponse(response);
-        LocalCell cell = new LocalCell(root);
-        LocalCell child = new LocalCell(cell);
+        Cell root = new Cell().setResponse(response);
+        Cell cell = new Cell(root);
+        Cell child = new Cell(cell);
 
-        root.setChild(Child.name("foo"), cell);
-        cell.setChild(Child.name("bar"), child);
+        root.putChild(Child.name("foo"), cell);
+        cell.putChild(Child.name("bar"), child);
 
         child.deliver(
                 Path.parse("one.two.three"),

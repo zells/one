@@ -1,10 +1,21 @@
 package org.zells.node.model;
 
+import org.zells.node.model.connect.Peer;
+import org.zells.node.model.connect.Protocol;
 import org.zells.node.model.refer.*;
+import org.zells.node.model.respond.Response;
 
-public abstract class Cell {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Cell {
 
     private Cell parent;
+    private Response response;
+    private Map<Name, Cell> children = new HashMap<Name, Cell>();
+    private final List<Peer> peers = new ArrayList<Peer>();
 
     public Cell() {
     }
@@ -13,17 +24,30 @@ public abstract class Cell {
         this.parent = parent;
     }
 
-    protected abstract void execute(Path context, Path message);
+    public Cell setResponse(Response response) {
+        this.response = response;
+        return this;
+    }
 
-    protected abstract boolean deliverOn(Path context, Path target, Path message);
+    public void putChild(Child name, Cell child) {
+        children.put(name, child);
+    }
 
-    protected abstract Name nameOf(Cell child);
+    public boolean hasChild(Name name) {
+        return children.containsKey(name);
+    }
 
-    protected Path getPath() {
-        if (parent == null) {
-            return new Path(Root.name());
-        }
-        return parent.getPath().with(parent.nameOf(this));
+    public Cell getChild(Name name) {
+        return children.get(name);
+    }
+
+    public void join(Peer peer, Path myPath, String myHost, int myPort) {
+        peer.send(Protocol.join(myPath, myHost, myPort));
+        joinedBy(peer);
+    }
+
+    public void joinedBy(Peer peer) {
+        peers.add(peer);
     }
 
     public boolean deliver(Path context, Path target, Path message) {
@@ -46,8 +70,30 @@ public abstract class Cell {
             return parent.deliver(context.up(), target, message.in(context.last()));
         }
 
-        return deliverOn(context, target, message);
+
+        if (children.containsKey(name)) {
+            return children.get(name).deliver(context.with(name), target.rest(), message.in(Parent.name()));
+        }
+
+        for (Peer peer : peers) {
+            if (peer.send(Protocol.deliver(context, target, message)).equals(Protocol.ok())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    public abstract LocalCell resolve(Path path);
+    protected void execute(Path context, Path message) {
+        if (response != null) {
+            response.execute(this, context, message);
+            return;
+        }
+
+        for (Peer peer : peers) {
+            if (peer.send(Protocol.deliver(context, new Path(), message)).equals(Protocol.ok())) {
+                return;
+            }
+        }
+    }
 }
