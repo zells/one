@@ -13,16 +13,12 @@ public class Protocol {
         return OK;
     }
 
-    public static String deliver(Path context, Path target, Path message) {
-        return DELIVER + " " + context + " " + target + " " + message;
-    }
-
     public static String fail(String message) {
         return FAIL + " " + message;
     }
 
-    public static String join(Path path, String host, int port) {
-        return JOIN + " " + path + " " + host + " " + port;
+    public static String deliver(Path target, Path message) {
+        return DELIVER + " " + target + " " + message;
     }
 
     public static boolean isDeliver(String signal) {
@@ -30,12 +26,15 @@ public class Protocol {
     }
 
     public static Object[] parseDeliver(String signal) throws Exception {
-        String[] parts = split(signal, 4);
+        String[] parts = split(signal, 2);
         return new Object[]{
                 Path.parse(parts[1]),
-                Path.parse(parts[2]),
-                Path.parse(parts[3])
+                Path.parse(parts[2])
         };
+    }
+
+    public static String join(Path path, String host, int port) {
+        return JOIN + " " + path + " " + host + " " + port;
     }
 
     public static boolean isJoin(String signal) {
@@ -43,7 +42,7 @@ public class Protocol {
     }
 
     public static Object[] parseJoin(String signal) throws Exception {
-        String[] parts = split(signal, 4);
+        String[] parts = split(signal, 3);
         return new Object[]{
                 Path.parse(parts[1]),
                 parts[2],
@@ -51,9 +50,9 @@ public class Protocol {
         };
     }
 
-    private static String[] split(String signal, int count) throws Exception {
+    private static String[] split(String signal, int argumentCount) throws Exception {
         String[] parts = signal.split(" ");
-        if (parts.length != count) {
+        if (parts.length != argumentCount + 1) {
             throw new Exception("Malformed signal");
         }
         return parts;

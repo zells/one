@@ -86,7 +86,7 @@ public class Cell {
 
     private boolean deliverToPeers(Path context, Path target, Path message) {
         for (Peer peer : peers) {
-            if (peer.send(Protocol.deliver(context, target, message)).equals(Protocol.ok())) {
+            if (peer.send(Protocol.deliver(target.in(context), message.in(context))).equals(Protocol.ok())) {
                 return true;
             }
         }
@@ -102,9 +102,5 @@ public class Cell {
         }
 
         deliverToPeers(context, new Path(), message);
-    }
-
-    public Cell getParent() {
-        return parent;
     }
 }

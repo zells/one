@@ -74,40 +74,13 @@ public class Node implements Runnable, SignalListener {
     }
 
     private String handleDeliver(Object[] parameters) throws Exception {
-        Path context = (Path) parameters[0];
-        Path target = (Path) parameters[1];
-        Path message = (Path) parameters[2];
+        Path target = (Path) parameters[0];
+        Path message = (Path) parameters[1];
 
-        if (context.isEmpty()) {
-            throw new Exception("Malformed signal: empty context.");
-        }
-
-        Cell cell = resolve(context.rest(), root);
-        if (cell.deliver(context, target, message)) {
+        if (root.deliver(new Path(target.first()), target.rest(), message.rest())) {
             return Protocol.ok();
         }
 
         throw new Exception("Delivery failed");
-    }
-
-    private Cell resolve(Path path, Cell cell) throws Exception {
-        Path current = new Path();
-
-        while (!path.isEmpty()) {
-            if (path.first() == Root.name()) {
-                cell = root;
-            } else if (path.first() == Parent.name()) {
-                cell = cell.getParent();
-            } else if (cell.hasChild(path.first())) {
-                cell = cell.getChild(path.first());
-            } else {
-                throw new Exception("Could not resolve [" + path + "] in [" + current + "]");
-            }
-
-            current = current.with(path.first());
-            path = path.rest();
-        }
-
-        return cell;
     }
 }

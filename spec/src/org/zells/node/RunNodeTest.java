@@ -43,14 +43,8 @@ public class RunNodeTest {
 
     @Test
     public void cannotDeliver() {
-        server.receive(Protocol.deliver(Path.parse("*"), Path.parse("foo"), Path.parse("message")));
+        server.receive(Protocol.deliver(Path.parse("*.foo"), Path.parse("*.message")));
         assertEquals(Protocol.fail("Delivery failed"), server.responded);
-    }
-
-    @Test
-    public void deliverMessageWithoutContext() {
-        server.receive(Protocol.deliver(new Path(), Path.parse("foo"), Path.parse("message")));
-        assertEquals(Protocol.fail("Malformed signal: empty context."), server.responded);
     }
 
     @Test
@@ -60,10 +54,11 @@ public class RunNodeTest {
         Cell cell = root.createChild("foo");
         Cell child = cell.createChild("bar").setReaction(response);
 
-        server.receive(Protocol.deliver(Path.parse("root.foo"), Path.parse("bar"), Path.parse("message")));
+        server.receive(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("root.foo.message")));
 
         assertEquals(Protocol.ok(), server.responded);
         assertEquals(child, response.executed);
+        assertEquals(Path.parse("root.foo.bar"), response.in);
     }
 
     @Test
@@ -73,7 +68,7 @@ public class RunNodeTest {
         Cell foo = root.createChild("foo");
         Cell bar = foo.createChild("bar").setReaction(response);
 
-        server.receive(Protocol.deliver(Path.parse("root.*.foo.bar.^.^.foo"), Path.parse("^.foo.*.foo.bar"), Path.parse("message")));
+        server.receive(Protocol.deliver(Path.parse("root.*.foo.bar.^.^.foo.^.foo.*.foo.bar"), Path.parse("root.*.foo.^.foo.message")));
 
         assertEquals(Protocol.ok(), server.responded);
         assertEquals(bar, response.executed);
@@ -85,7 +80,7 @@ public class RunNodeTest {
         assertEquals(Protocol.ok(), server.responded);
 
         root.deliver(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message"));
-        assertEquals(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("baz"), Path.parse("^.^.message")) +
+        assertEquals(Protocol.deliver(Path.parse("root.foo.bar.baz"), Path.parse("root.message")) +
                 " -> other.host:1234", sent);
     }
 
@@ -103,7 +98,7 @@ public class RunNodeTest {
         assertEquals(Protocol.ok(), server.responded);
 
         root.deliver(Path.parse("root"), Path.parse("foo.bar"), Path.parse("message"));
-        assertEquals(Protocol.deliver(Path.parse("root.foo"), Path.parse("bar"), Path.parse("^.message")) +
+        assertEquals(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("root.message")) +
                 " -> other.host:1234", sent);
     }
 
@@ -138,10 +133,12 @@ public class RunNodeTest {
 
     private class FakeReaction implements Reaction {
         public Cell executed;
+        public Path in;
 
         @Override
         public void execute(Cell cell, Path context, Path message) {
             executed = cell;
+            in = context;
         }
     }
 
