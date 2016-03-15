@@ -103,6 +103,44 @@ public class DeliverRemotelySpec {
         assertFalse(root.deliver(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message")));
     }
 
+    @Test
+    public void searchInPeers() {
+        FakePeer peer = new FakePeer();
+
+        Cell root = new Cell();
+        Cell foo = root.createChild("foo").joinedBy(peer);
+        foo.createChild("bar");
+
+        assertTrue(root.deliver(Path.parse("*"), Path.parse("foo.baz"), Path.parse("message")));
+        assertEquals(Protocol.deliver(Path.parse("*.foo"), Path.parse("baz"), Path.parse("^.message")), peer.sent);
+    }
+
+    @Test
+    public void searchChildInParent() {
+        FakePeer peer = new FakePeer();
+
+        Cell root = new Cell();
+        Cell foo = root.createChild("foo").joinedBy(peer);
+        Cell bar = foo.createChild("bar");
+        Cell baz = bar.createChild("baz");
+
+        assertTrue(baz.deliver(Path.parse("*.foo.bar.baz"), Path.parse("bam"), Path.parse("message")));
+        assertEquals(Protocol.deliver(Path.parse("*.foo"), Path.parse("bar.baz.bam"), Path.parse("bar.baz.message")), peer.sent);
+    }
+
+    @Test
+    public void searchExecutionInParent() {
+        FakePeer peer = new FakePeer();
+
+        Cell root = new Cell();
+        Cell foo = root.createChild("foo").joinedBy(peer);
+        Cell bar = foo.createChild("bar");
+        Cell baz = bar.createChild("baz");
+
+        assertTrue(baz.deliver(Path.parse("*.foo.bar.baz"), new Path(), Path.parse("message")));
+        assertEquals(Protocol.deliver(Path.parse("*.foo"), Path.parse("bar.baz"), Path.parse("bar.baz.message")), peer.sent);
+    }
+
     private class FakePeer implements Peer {
         public String sent;
         private String response = Protocol.ok();

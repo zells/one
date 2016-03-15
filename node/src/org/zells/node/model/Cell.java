@@ -43,13 +43,14 @@ public class Cell {
         return children.get(name);
     }
 
-    public void join(Peer peer, Path myPath, String myHost, int myPort) {
+    public Cell join(Peer peer, Path myPath, String myHost, int myPort) {
         peer.send(Protocol.join(myPath, myHost, myPort));
-        joinedBy(peer);
+        return joinedBy(peer);
     }
 
-    public void joinedBy(Peer peer) {
+    public Cell joinedBy(Peer peer) {
         peers.add(peer);
+        return this;
     }
 
     public boolean deliver(Path context, Path target, Path message) {
@@ -77,13 +78,18 @@ public class Cell {
             return children.get(name).deliver(context.with(name), target.rest(), message.in(Parent.name()));
         }
 
+        return deliverToPeers(context, target, message);
+    }
+
+    private boolean deliverToPeers(Path context, Path target, Path message) {
         for (Peer peer : peers) {
             if (peer.send(Protocol.deliver(context, target, message)).equals(Protocol.ok())) {
                 return true;
             }
         }
 
-        return false;
+        return parent != null
+                && parent.deliverToPeers(context.up(), target.in(context.last()), message.in(context.last()));
     }
 
     protected void execute(Path context, Path message) {
@@ -92,10 +98,6 @@ public class Cell {
             return;
         }
 
-        for (Peer peer : peers) {
-            if (peer.send(Protocol.deliver(context, new Path(), message)).equals(Protocol.ok())) {
-                return;
-            }
-        }
+        deliverToPeers(context, new Path(), message);
     }
 }
