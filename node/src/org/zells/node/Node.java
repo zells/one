@@ -33,14 +33,16 @@ public class Node implements Runnable, SignalListener {
     @Override
     public String respondTo(String signal) {
         try {
-            return handleSignal(signal);
+            return handleSignal(signal)
+                    ? Protocol.ok()
+                    : Protocol.fail(signal);
         } catch (Exception e) {
             e.printStackTrace(error);
             return Protocol.fail(e.getMessage());
         }
     }
 
-    private String handleSignal(String signal) throws Exception {
+    private boolean handleSignal(String signal) throws Exception {
         if (Protocol.isDeliver(signal)) {
             return handleDeliver(Protocol.parseDeliver(signal));
         } else if (Protocol.isJoin(signal)) {
@@ -50,10 +52,21 @@ public class Node implements Runnable, SignalListener {
         throw new Exception("Unknown signal");
     }
 
-    private String handleJoin(Object[] parameters) throws Exception {
+    private boolean handleDeliver(Object[] parameters) throws Exception {
+        Path target = (Path) parameters[0];
+        Path message = (Path) parameters[1];
+        Path role = (Path) parameters[2];
+
+        return new Messenger()
+                .deliver(root, new Delivery(new Path(target.first()), target.rest(), message.rest(), role))
+                .waitForIt()
+                .hasDelivered();
+    }
+
+    private boolean handleJoin(Object[] parameters) throws Exception {
         Peer peer = server.makePeer((String) parameters[1], (Integer) parameters[2]);
         resolve((Path) parameters[0], root).joinedBy(peer);
-        return Protocol.ok();
+        return true;
     }
 
     private Cell resolve(Path path, Cell cell) throws Exception {
@@ -75,17 +88,5 @@ public class Node implements Runnable, SignalListener {
             path = path.rest();
         }
         return cell;
-    }
-
-    private String handleDeliver(Object[] parameters) throws Exception {
-        Path target = (Path) parameters[0];
-        Path message = (Path) parameters[1];
-        Path role = (Path) parameters[2];
-
-        if (root.deliver(new Delivery(new Path(target.first()), target.rest(), message.rest(), role))) {
-            return Protocol.ok();
-        }
-
-        throw new Exception("Delivery failed");
     }
 }

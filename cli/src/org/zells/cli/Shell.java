@@ -1,5 +1,6 @@
 package org.zells.cli;
 
+import org.zells.node.Messenger;
 import org.zells.node.Node;
 import org.zells.node.io.SocketPeer;
 import org.zells.node.io.SocketServer;
@@ -56,21 +57,20 @@ public class Shell {
         String input;
         while ((input = in.readLine()) != null) {
             try {
-                final Mailing mailing = Mailing.parse(input);
+                Mailing mailing = Mailing.parse(input);
+                final Path target = mailing.getTarget().in(self);
+                final Path message = mailing.getMessage().in(self);
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Path target = mailing.getTarget().in(self);
-                        Path message = mailing.getMessage().in(self);
-
-                        if (!root.deliver(new Delivery(new Path(Root.name()), target, message))) {
-                            System.err.println();
-                            System.err.println("Deliver failed: " + target + " " + message);
-                            System.err.print(PROMPT);
-                        }
-                    }
-                }).start();
+                new Messenger()
+                        .deliver(root, new Delivery(new Path(Root.name()), target, message))
+                        .whenFailed(new Runnable() {
+                            @Override
+                            public void run() {
+                                System.err.println();
+                                System.err.println("Delivery failed: " + target + " " + message);
+                                System.err.print(PROMPT);
+                            }
+                        });
             } catch (Exception ignored) {
             }
 

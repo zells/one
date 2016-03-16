@@ -45,7 +45,7 @@ public class RunNodeSpec {
     @Test
     public void cannotDeliver() {
         server.receive(protocolDeliver("*", "foo", "message"));
-        assertEquals(Protocol.fail("Delivery failed"), server.responded);
+        assertEquals(Protocol.fail("DELIVER *.foo *.message *.foo"), server.responded);
     }
 
     @Test
