@@ -78,37 +78,26 @@ public class Cell {
                 || deliverToStem(delivery);
     }
 
+    protected boolean execute(Delivery delivery) {
+        if (reaction != null) {
+            reaction.execute(this, delivery);
+            return true;
+        }
+
+        return false;
+    }
+
     private boolean deliverToSelf(Delivery delivery) {
         return delivery.hasArrived()
                 && execute(delivery);
     }
 
-    private boolean deliverToStem(Delivery delivery) {
-        return stem != null
-                && parent != null
-                && parent.deliver(delivery.toStem(stem))
-                && adopt(delivery);
-    }
-
-    private boolean adopt(Delivery delivery) {
-        Cell cell = this;
-        Path current = stem;
-        while (!delivery.hasArrived()) {
-            current = current.with(delivery.nextTarget());
-            cell.createChild(delivery.nextTarget().toString());
-
-            cell = cell.getChild(delivery.nextTarget());
-            cell.setStem(current);
-
-            delivery = delivery.toChild();
-        }
-        return true;
-    }
-
-    private boolean deliverToChild(Delivery delivery) {
+    private boolean deliverToParent(Delivery delivery) {
         return !delivery.hasArrived()
-                && children.containsKey(delivery.nextTarget())
-                && children.get(delivery.nextTarget()).deliver(delivery.toChild());
+                && delivery.nextTarget() instanceof Parent
+                && parent != null
+                && parent.deliver(delivery.toParent());
+
     }
 
     private boolean deliverToSelfRoot(Delivery delivery) {
@@ -127,12 +116,10 @@ public class Cell {
 
     }
 
-    private boolean deliverToParent(Delivery delivery) {
+    private boolean deliverToChild(Delivery delivery) {
         return !delivery.hasArrived()
-                && delivery.nextTarget() instanceof Parent
-                && parent != null
-                && parent.deliver(delivery.toParent());
-
+                && children.containsKey(delivery.nextTarget())
+                && children.get(delivery.nextTarget()).deliver(delivery.toChild());
     }
 
     private boolean deliverToPeers(Delivery delivery) {
@@ -146,12 +133,27 @@ public class Cell {
                 && parent.deliverToPeers(delivery.toParent());
     }
 
-    protected boolean execute(Delivery delivery) {
-        if (reaction != null) {
-            reaction.execute(this, delivery);
-            return true;
-        }
+    private boolean deliverToStem(Delivery delivery) {
+        return stem != null
+                && !(stem.first() instanceof Child)
+                && !stem.toString().startsWith(delivery.getContext().toString())
+                && parent != null
+                && parent.deliver(delivery.toStem(stem))
+                && adopt(delivery);
+    }
 
-        return false;
+    private boolean adopt(Delivery delivery) {
+        Cell cell = this;
+        Path current = stem;
+        while (!delivery.hasArrived()) {
+            current = current.with(delivery.nextTarget());
+            cell.createChild(delivery.nextTarget().toString());
+
+            cell = cell.getChild(delivery.nextTarget());
+            cell.setStem(current);
+
+            delivery = delivery.toChild();
+        }
+        return true;
     }
 }

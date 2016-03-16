@@ -88,4 +88,18 @@ public class InheritFromStemSpec {
         assertTrue(root.deliver(new Delivery(Path.parse("*"), Path.parse("sub"), Path.parse("message"))));
         assertEquals(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("stem"), Path.parse("message"), Path.parse("*.sub"))), sent);
     }
+
+    @Test
+    public void childCannotBeStem() {
+        Cell root = new Cell();
+        root.createChild("foo").setStem(Path.parse("child"));
+        assertFalse(root.deliver(new Delivery(Path.parse("r"), Path.parse("foo"), Path.parse("m"))));
+    }
+
+    @Test
+    public void childCannotBeSelf() {
+        Cell root = new Cell();
+        root.createChild("foo").setStem(Path.parse("*.foo.bar"));
+        assertFalse(root.deliver(new Delivery(Path.parse("*"), Path.parse("foo"), Path.parse("m"))));
+    }
 }
