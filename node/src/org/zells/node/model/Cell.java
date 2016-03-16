@@ -2,8 +2,10 @@ package org.zells.node.model;
 
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.*;
 import org.zells.node.model.react.Reaction;
+import org.zells.node.model.refer.Path;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,12 +18,17 @@ public class Cell {
     private Reaction reaction;
     private Map<Name, Cell> children = new HashMap<Name, Cell>();
     private final List<Peer> peers = new ArrayList<Peer>();
+    private Path stem;
 
     public Cell() {
     }
 
     public Cell(Cell parent) {
         this.parent = parent;
+    }
+
+    public void setStem(Path stem) {
+        this.stem = stem;
     }
 
     public Cell setReaction(Reaction reaction) {
@@ -56,51 +63,74 @@ public class Cell {
         return this;
     }
 
-    public boolean deliver(Path context, Path target, Path message) {
-        if (target.isEmpty()) {
-            execute(context, message);
-            return true;
-        }
-
-        Name name = target.first();
-
-        if (name instanceof Parent && parent != null) {
-            return parent.deliver(context.up(), target.rest(), message.in(context.last()));
-        }
-
-        if (name instanceof Root) {
-            if (parent == null) {
-                return deliver(context, target.rest(), message);
-            }
-
-            return parent.deliver(context.up(), target, message.in(context.last()));
-        }
-
-
-        if (children.containsKey(name)) {
-            return children.get(name).deliver(context.with(name), target.rest(), message.in(Parent.name()));
-        }
-
-        return deliverToPeers(context, target, message);
+    public boolean deliver(Delivery delivery) {
+        return deliverToSelf(delivery)
+                || deliverToParent(delivery)
+                || deliverToSelfRoot(delivery)
+                || deliverToRoot(delivery)
+                || deliverToChild(delivery)
+                || deliverToPeers(delivery)
+                || deliverToStem(delivery);
     }
 
-    private boolean deliverToPeers(Path context, Path target, Path message) {
+    private boolean deliverToSelf(Delivery delivery) {
+        return delivery.hasArrived()
+                && execute(delivery);
+    }
+
+    private boolean deliverToStem(Delivery delivery) {
+        return stem != null
+                && parent != null
+                && parent.deliver(delivery.toStem(stem));
+    }
+
+    private boolean deliverToChild(Delivery delivery) {
+        return !delivery.hasArrived()
+                && children.containsKey(delivery.nextTarget())
+                && children.get(delivery.nextTarget()).deliver(delivery.toChild());
+    }
+
+    private boolean deliverToSelfRoot(Delivery delivery) {
+        return !delivery.hasArrived()
+                && delivery.nextTarget() instanceof Root
+                && parent == null
+                && deliver(delivery.toSelf());
+
+    }
+
+    private boolean deliverToRoot(Delivery delivery) {
+        return !delivery.hasArrived()
+                && delivery.nextTarget() instanceof Root
+                && parent != null
+                && parent.deliver(delivery.toParent());
+
+    }
+
+    private boolean deliverToParent(Delivery delivery) {
+        return !delivery.hasArrived()
+                && delivery.nextTarget() instanceof Parent
+                && parent != null
+                && parent.deliver(delivery.toParent());
+
+    }
+
+    private boolean deliverToPeers(Delivery delivery) {
         for (Peer peer : peers) {
-            if (peer.send(Protocol.deliver(target.in(context), message.in(context))).equals(Protocol.ok())) {
+            if (peer.send(Protocol.deliver(delivery)).equals(Protocol.ok())) {
                 return true;
             }
         }
 
         return parent != null
-                && parent.deliverToPeers(context.up(), target.in(context.last()), message.in(context.last()));
+                && parent.deliverToPeers(delivery.toParent());
     }
 
-    protected void execute(Path context, Path message) {
+    protected boolean execute(Delivery delivery) {
         if (reaction != null) {
-            reaction.execute(this, context, message);
-            return;
+            reaction.execute(this, delivery);
+            return true;
         }
 
-        deliverToPeers(context, new Path(), message);
+        return false;
     }
 }

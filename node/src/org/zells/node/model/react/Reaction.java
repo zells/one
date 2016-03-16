@@ -5,5 +5,5 @@ import org.zells.node.model.refer.Path;
 
 public interface Reaction {
 
-    void execute(Cell cell, Path context, Path message);
+    void execute(Cell cell, Delivery delivery);
 }

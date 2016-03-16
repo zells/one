@@ -4,6 +4,7 @@ import org.zells.node.Node;
 import org.zells.node.io.SocketPeer;
 import org.zells.node.io.SocketServer;
 import org.zells.node.model.Cell;
+import org.zells.node.model.react.Delivery;
 import org.zells.node.model.react.Mailing;
 import org.zells.node.model.refer.Child;
 import org.zells.node.model.refer.Path;
@@ -63,7 +64,7 @@ public class Shell {
                         Path target = mailing.getTarget().in(self);
                         Path message = mailing.getMessage().in(self);
 
-                        if (!root.deliver(new Path(Root.name()), target, message)) {
+                        if (!root.deliver(new Delivery(new Path(Root.name()), target, message))) {
                             System.err.println();
                             System.err.println("Deliver failed: " + target + " " + message);
                             System.err.print(PROMPT);

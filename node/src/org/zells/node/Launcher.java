@@ -2,6 +2,7 @@ package org.zells.node;
 
 import org.zells.node.io.SocketServer;
 import org.zells.node.model.Cell;
+import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.Root;
 import org.zells.node.model.react.Reaction;
@@ -23,8 +24,8 @@ public class Launcher {
 
     private static class EchoMessage implements Reaction {
         @Override
-        public void execute(Cell cell, Path context, Path message) {
-            cell.deliver(context, message, new Path(Root.name()));
+        public void execute(Cell cell, Delivery delivery) {
+            cell.deliver(new Delivery(delivery.getContext(), delivery.getMessage(), new Path(Root.name())));
         }
     }
 }

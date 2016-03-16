@@ -7,6 +7,7 @@ import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.react.Delivery;
 import org.zells.node.model.react.Reaction;
 import org.zells.node.model.refer.Path;
 
@@ -43,7 +44,7 @@ public class RunNodeSpec {
 
     @Test
     public void cannotDeliver() {
-        server.receive(Protocol.deliver(Path.parse("*.foo"), Path.parse("*.message")));
+        server.receive(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("foo"), Path.parse("message"))));
         assertEquals(Protocol.fail("Delivery failed"), server.responded);
     }
 
@@ -54,11 +55,23 @@ public class RunNodeSpec {
         Cell cell = root.createChild("foo");
         Cell child = cell.createChild("bar").setReaction(response);
 
-        server.receive(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("root.foo.message")));
+        server.receive(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("foo.message"))));
 
         assertEquals(Protocol.ok(), server.responded);
         assertEquals(child, response.executed);
-        assertEquals(Path.parse("root.foo.bar"), response.in);
+    }
+
+    @Test
+    public void executeInRole() {
+        FakeReaction response = new FakeReaction();
+
+        Cell cell = root.createChild("foo");
+        cell.createChild("bar").setReaction(response);
+
+        server.receive(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("foo.message"), Path.parse("some.role"))));
+
+        assertEquals(Protocol.ok(), server.responded);
+        assertEquals(Path.parse("some.role"), response.in);
     }
 
     @Test
@@ -68,7 +81,7 @@ public class RunNodeSpec {
         Cell foo = root.createChild("foo");
         Cell bar = foo.createChild("bar").setReaction(response);
 
-        server.receive(Protocol.deliver(Path.parse("root.*.foo.bar.^.^.foo.^.foo.*.foo.bar"), Path.parse("root.*.foo.^.foo.message")));
+        server.receive(Protocol.deliver(new Delivery(Path.parse("root.*.foo.bar.^.^.foo.^.foo.*.foo"), Path.parse("bar"), Path.parse("message"))));
 
         assertEquals(Protocol.ok(), server.responded);
         assertEquals(bar, response.executed);
@@ -79,8 +92,8 @@ public class RunNodeSpec {
         server.receive(Protocol.join(Path.parse("root.foo.bar"), "other.host", 1234));
         assertEquals(Protocol.ok(), server.responded);
 
-        root.deliver(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message"));
-        assertEquals(Protocol.deliver(Path.parse("root.foo.bar.baz"), Path.parse("root.message")) +
+        root.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message")));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message"))) +
                 " -> other.host:1234", sent);
     }
 
@@ -91,8 +104,8 @@ public class RunNodeSpec {
         server.receive(Protocol.join(Path.parse("root.foo"), "other.host", 1234));
         assertEquals(Protocol.ok(), server.responded);
 
-        root.deliver(Path.parse("root"), Path.parse("foo.bar"), Path.parse("message"));
-        assertEquals(Protocol.deliver(Path.parse("root.foo.bar"), Path.parse("root.message")) +
+        root.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("message")));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("message"))) +
                 " -> other.host:1234", sent);
     }
 
@@ -130,9 +143,9 @@ public class RunNodeSpec {
         public Path in;
 
         @Override
-        public void execute(Cell cell, Path context, Path message) {
+        public void execute(Cell cell, Delivery delivery) {
             executed = cell;
-            in = context;
+            in = delivery.getRole();
         }
     }
 

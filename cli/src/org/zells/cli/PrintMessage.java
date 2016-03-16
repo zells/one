@@ -1,6 +1,7 @@
 package org.zells.cli;
 
 import org.zells.node.model.Cell;
+import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.Path;
 
 import java.io.PrintStream;
@@ -15,8 +16,8 @@ public class PrintMessage extends Cell {
     }
 
     @Override
-    public boolean deliver(Path context, Path target, Path message) {
-        out.println(">>> " + target + " " + message);
+    public boolean deliver(Delivery delivery) {
+        out.println(">>> " + delivery.getTarget() + " " + delivery.getMessage());
         out.print(Shell.PROMPT);
         return true;
     }

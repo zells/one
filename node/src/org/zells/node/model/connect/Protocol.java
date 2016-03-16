@@ -1,6 +1,7 @@
 package org.zells.node.model.connect;
 
 import org.zells.node.io.PathParser;
+import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.Path;
 
 import java.util.List;
@@ -20,8 +21,11 @@ public class Protocol {
         return FAIL + " " + message;
     }
 
-    public static String deliver(Path target, Path message) {
-        return DELIVER + " " + target + " " + message;
+    public static String deliver(Delivery delivery) {
+        return DELIVER + " " +
+                delivery.getTarget().in(delivery.getContext()) + " " +
+                delivery.getMessage().in(delivery.getContext()) + " " +
+                delivery.getRole();
     }
 
     public static boolean isDeliver(String signal) {
@@ -29,10 +33,11 @@ public class Protocol {
     }
 
     public static Object[] parseDeliver(String signal) throws Exception {
-        List<Path> parts = parse(signal, 2);
+        List<Path> parts = parse(signal, 3);
         return new Object[]{
                 parts.get(0),
-                parts.get(1)
+                parts.get(1),
+                parts.get(2)
         };
     }
 

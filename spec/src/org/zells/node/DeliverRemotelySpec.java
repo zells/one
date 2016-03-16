@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.Path;
 
 import static org.junit.Assert.*;
@@ -30,8 +31,8 @@ public class DeliverRemotelySpec {
         foo.joinedBy(peer);
 
         assertNull(peer.sent);
-        assertTrue(root.deliver(Path.parse("context"), Path.parse("foo"), Path.parse("message")));
-        assertEquals(Protocol.deliver(Path.parse("context.foo"), Path.parse("context.message")), peer.sent);
+        assertTrue(root.deliver(new Delivery(Path.parse("context"), Path.parse("foo"), Path.parse("message"))));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("context"), Path.parse("foo"), Path.parse("message"))), peer.sent);
     }
 
     @Test
@@ -42,8 +43,8 @@ public class DeliverRemotelySpec {
         FakePeer peer = new FakePeer();
         foo.joinedBy(peer);
 
-        assertTrue(root.deliver(Path.parse("context"), Path.parse("foo"), Path.parse("message")));
-        assertEquals(Protocol.deliver(Path.parse("context.foo"), Path.parse("context.message")), peer.sent);
+        assertTrue(root.deliver(new Delivery(Path.parse("context"), Path.parse("foo"), Path.parse("message"))));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("context"), Path.parse("foo"), Path.parse("message"))), peer.sent);
     }
 
     @Test
@@ -54,8 +55,8 @@ public class DeliverRemotelySpec {
         FakePeer peer = new FakePeer();
         foo.joinedBy(peer);
 
-        assertTrue(root.deliver(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message")));
-        assertEquals(Protocol.deliver(Path.parse("context.foo.bar"), Path.parse("context.message")), peer.sent);
+        assertTrue(root.deliver(new Delivery(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message"))));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message"))), peer.sent);
     }
 
     @Test
@@ -69,10 +70,10 @@ public class DeliverRemotelySpec {
         foo.joinedBy(one);
         foo.joinedBy(two);
 
-        assertTrue(root.deliver(Path.parse("context"), Path.parse("foo"), Path.parse("message")));
+        assertTrue(root.deliver(new Delivery(Path.parse("context"), Path.parse("foo"), Path.parse("message"))));
 
-        assertEquals(Protocol.deliver(Path.parse("context.foo"), Path.parse("context.message")), one.sent);
-        assertEquals(Protocol.deliver(Path.parse("context.foo"), Path.parse("context.message")), two.sent);
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("context"), Path.parse("foo"), Path.parse("message"))), one.sent);
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("context"), Path.parse("foo"), Path.parse("message"))), two.sent);
     }
 
     @Test
@@ -86,10 +87,10 @@ public class DeliverRemotelySpec {
         remote.joinedBy(one);
         remote.joinedBy(two);
 
-        assertTrue(root.deliver(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message")));
+        assertTrue(root.deliver(new Delivery(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message"))));
 
-        assertEquals(Protocol.deliver(Path.parse("context.foo.bar"), Path.parse("context.message")), one.sent);
-        assertEquals(Protocol.deliver(Path.parse("context.foo.bar"), Path.parse("context.message")), two.sent);
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message"))), one.sent);
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message"))), two.sent);
     }
 
     @Test
@@ -100,7 +101,7 @@ public class DeliverRemotelySpec {
         FakePeer peer = new FakePeer(Protocol.fail("foo"));
         foo.joinedBy(peer);
 
-        assertFalse(root.deliver(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message")));
+        assertFalse(root.deliver(new Delivery(Path.parse("context"), Path.parse("foo.bar"), Path.parse("message"))));
     }
 
     @Test
@@ -111,8 +112,8 @@ public class DeliverRemotelySpec {
         Cell foo = root.createChild("foo").joinedBy(peer);
         foo.createChild("bar");
 
-        assertTrue(root.deliver(Path.parse("*"), Path.parse("foo.baz"), Path.parse("message")));
-        assertEquals(Protocol.deliver(Path.parse("*.foo.baz"), Path.parse("*.message")), peer.sent);
+        assertTrue(root.deliver(new Delivery(Path.parse("*"), Path.parse("foo.baz"), Path.parse("message"))));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("foo.baz"), Path.parse("message"))), peer.sent);
     }
 
     @Test
@@ -124,8 +125,8 @@ public class DeliverRemotelySpec {
         Cell bar = foo.createChild("bar");
         Cell baz = bar.createChild("baz");
 
-        assertTrue(baz.deliver(Path.parse("*.foo.bar.baz"), Path.parse("bam"), Path.parse("message")));
-        assertEquals(Protocol.deliver(Path.parse("*.foo.bar.baz.bam"), Path.parse("*.foo.bar.baz.message")), peer.sent);
+        assertTrue(baz.deliver(new Delivery(Path.parse("*.foo.bar.baz"), Path.parse("bam"), Path.parse("message"))));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("foo.bar.baz.bam"), Path.parse("foo.bar.baz.message"))), peer.sent);
     }
 
     @Test
@@ -137,8 +138,8 @@ public class DeliverRemotelySpec {
         Cell bar = foo.createChild("bar");
         Cell baz = bar.createChild("baz");
 
-        assertTrue(baz.deliver(Path.parse("*.foo.bar.baz"), new Path(), Path.parse("message")));
-        assertEquals(Protocol.deliver(Path.parse("*.foo.bar.baz"), Path.parse("*.foo.bar.baz.message")), peer.sent);
+        assertTrue(baz.deliver(new Delivery(Path.parse("*.foo.bar.baz"), new Path(), Path.parse("message"))));
+        assertEquals(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("foo.bar.baz"), Path.parse("foo.bar.baz.message"))), peer.sent);
     }
 
     private class FakePeer implements Peer {
