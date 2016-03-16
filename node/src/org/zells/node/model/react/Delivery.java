@@ -47,7 +47,7 @@ public class Delivery {
     }
 
     public Delivery toStem(Path stem) {
-        return new Delivery(context.up(), stem.in(context.last()), message.in(context.last()), role);
+        return new Delivery(context.up(), stem.in(context.last()).with(target), message.in(context.last()), role);
     }
 
     public Delivery toChild() {

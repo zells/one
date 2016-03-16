@@ -27,8 +27,13 @@ public class Cell {
         this.parent = parent;
     }
 
-    public void setStem(Path stem) {
+    public Cell setStem(Path stem) {
         this.stem = stem;
+        return this;
+    }
+
+    public Path getStem() {
+        return stem;
     }
 
     public Cell setReaction(Reaction reaction) {
@@ -81,7 +86,23 @@ public class Cell {
     private boolean deliverToStem(Delivery delivery) {
         return stem != null
                 && parent != null
-                && parent.deliver(delivery.toStem(stem));
+                && parent.deliver(delivery.toStem(stem))
+                && adopt(delivery);
+    }
+
+    private boolean adopt(Delivery delivery) {
+        Cell cell = this;
+        Path current = stem;
+        while (!delivery.hasArrived()) {
+            current = current.with(delivery.nextTarget());
+            cell.createChild(delivery.nextTarget().toString());
+
+            cell = cell.getChild(delivery.nextTarget());
+            cell.setStem(current);
+
+            delivery = delivery.toChild();
+        }
+        return true;
     }
 
     private boolean deliverToChild(Delivery delivery) {

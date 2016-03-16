@@ -3,6 +3,7 @@ package org.zells.node;
 import org.zells.node.io.Server;
 import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
+import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.*;
@@ -50,11 +51,15 @@ public class Node implements Runnable, SignalListener {
     }
 
     private String handleJoin(Object[] parameters) throws Exception {
-        Path path = (Path) parameters[0];
+        Peer peer = server.makePeer((String) parameters[1], (Integer) parameters[2]);
+        resolve((Path) parameters[0], root).joinedBy(peer);
+        return Protocol.ok();
+    }
 
-        Cell cell = root;
+    private Cell resolve(Path path, Cell cell) throws Exception {
         Path current = new Path(path.first());
         path = path.rest();
+
         while (!path.isEmpty()) {
             Name name = path.first();
 
@@ -69,9 +74,7 @@ public class Node implements Runnable, SignalListener {
             current = current.with(name);
             path = path.rest();
         }
-
-        cell.joinedBy(server.makePeer((String) parameters[1], (Integer) parameters[2]));
-        return Protocol.ok();
+        return cell;
     }
 
     private String handleDeliver(Object[] parameters) throws Exception {
