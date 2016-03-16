@@ -22,17 +22,14 @@ public class DeliverLocallySpec {
 
     @Test
     public void noResponse() {
-        new Cell().deliver(new Delivery(new Path(), new Path(), new Path()));
+        deliver(new Cell(), "", "", "");
     }
 
     @Test
     public void executeResponse() {
         Cell root = new Cell().setReaction(response);
 
-        root.deliver(new Delivery(
-                new Path(Child.name("foo")),
-                new Path(),
-                new Path(Child.name("bar"))));
+        deliver(root, "foo", "", "bar");
 
         assertEquals(root, response.cell);
         assertEquals(Path.parse("foo"), response.context);
@@ -41,10 +38,7 @@ public class DeliverLocallySpec {
 
     @Test
     public void noChildren() {
-        assertFalse(new Cell().deliver(new Delivery(
-                new Path(),
-                Path.parse("foo"),
-                new Path())));
+        assertFalse(deliver(new Cell(), "", "foo", ""));
     }
 
     @Test
@@ -52,10 +46,7 @@ public class DeliverLocallySpec {
         Cell root = new Cell();
         root.createChild("foo");
 
-        assertFalse(root.deliver(new Delivery(
-                new Path(),
-                Path.parse("bar"),
-                new Path())));
+        assertFalse(deliver(root, "", "bar", ""));
     }
 
     @Test
@@ -63,10 +54,7 @@ public class DeliverLocallySpec {
         Cell root = new Cell();
         Cell foo = root.createChild("foo").setReaction(response);
 
-        root.deliver(new Delivery(
-                Path.parse("me"),
-                Path.parse("foo"),
-                Path.parse("message")));
+        deliver(root, "me", "foo", "message");
 
         assertEquals(foo, response.cell);
         assertEquals(Path.parse("me.foo"), response.context);
@@ -80,10 +68,7 @@ public class DeliverLocallySpec {
         root.createChild("foo").setReaction(response);
         Cell replaced = root.createChild("foo").setReaction(response);
 
-        root.deliver(new Delivery(
-                Path.parse("me"),
-                Path.parse("foo"),
-                Path.parse("message")));
+        deliver(root, "me", "foo", "message");
 
         assertEquals(replaced, response.cell);
         assertEquals(Path.parse("me.foo"), response.context);
@@ -95,10 +80,7 @@ public class DeliverLocallySpec {
         Cell root = new Cell().setReaction(response);
         Cell foo = root.createChild("foo");
 
-        foo.deliver(new Delivery(
-                Path.parse("parent.child"),
-                Path.parse("^"),
-                Path.parse("message")));
+        deliver(foo, "parent.child", "^", "message");
 
         assertEquals(root, response.cell);
         assertEquals(Path.parse("parent"), response.context);
@@ -111,14 +93,18 @@ public class DeliverLocallySpec {
         Cell foo = root.createChild("foo");
         Cell bar = foo.createChild("bar");
 
-        bar.deliver(new Delivery(
-                Path.parse("one.two.three"),
-                Path.parse("*"),
-                Path.parse("message")));
+        deliver(bar, "one.two.three", "*", "message");
 
         assertEquals(root, response.cell);
         assertEquals(Path.parse("one"), response.context);
         assertEquals(Path.parse("two.three.message"), response.message);
+    }
+
+    private boolean deliver(Cell root, String context, String target, String message) {
+        return root.deliver(new Delivery(
+                Path.parse(context),
+                Path.parse(target),
+                Path.parse(message)));
     }
 
     private class TestReaction implements Reaction {

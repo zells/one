@@ -44,7 +44,7 @@ public class RunNodeSpec {
 
     @Test
     public void cannotDeliver() {
-        server.receive(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("foo"), Path.parse("message"))));
+        server.receive(protocolDeliver("*", "foo", "message"));
         assertEquals(Protocol.fail("Delivery failed"), server.responded);
     }
 
@@ -55,7 +55,7 @@ public class RunNodeSpec {
         Cell cell = root.createChild("foo");
         Cell child = cell.createChild("bar").setReaction(response);
 
-        server.receive(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("foo.message"))));
+        server.receive(protocolDeliver("root", "foo.bar", "foo.message"));
 
         assertEquals(Protocol.ok(), server.responded);
         assertEquals(child, response.executed);
@@ -68,7 +68,7 @@ public class RunNodeSpec {
         Cell cell = root.createChild("foo");
         cell.createChild("bar").setReaction(response);
 
-        server.receive(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("foo.message"), Path.parse("some.role"))));
+        server.receive(protocolDeliver("root", "foo.bar", "foo.message", "some.role"));
 
         assertEquals(Protocol.ok(), server.responded);
         assertEquals(Path.parse("some.role"), response.in);
@@ -81,7 +81,7 @@ public class RunNodeSpec {
         Cell foo = root.createChild("foo");
         Cell bar = foo.createChild("bar").setReaction(response);
 
-        server.receive(Protocol.deliver(new Delivery(Path.parse("root.*.foo.bar.^.^.foo.^.foo.*.foo"), Path.parse("bar"), Path.parse("message"))));
+        server.receive(protocolDeliver("root.*.foo.bar.^.^.foo.^.foo.*.foo", "bar", "message"));
 
         assertEquals(Protocol.ok(), server.responded);
         assertEquals(bar, response.executed);
@@ -92,8 +92,8 @@ public class RunNodeSpec {
         server.receive(Protocol.join(Path.parse("root.foo.bar"), "other.host", 1234));
         assertEquals(Protocol.ok(), server.responded);
 
-        root.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message")));
-        assertEquals(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar.baz"), Path.parse("message"))) +
+        deliver("root", "foo.bar.baz", "message");
+        assertEquals(protocolDeliver("root", "foo.bar.baz", "message") +
                 " -> other.host:1234", sent);
     }
 
@@ -104,15 +104,27 @@ public class RunNodeSpec {
         server.receive(Protocol.join(Path.parse("root.foo"), "other.host", 1234));
         assertEquals(Protocol.ok(), server.responded);
 
-        root.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("message")));
-        assertEquals(Protocol.deliver(new Delivery(Path.parse("root"), Path.parse("foo.bar"), Path.parse("message"))) +
+        deliver("root", "foo.bar", "message");
+        assertEquals(protocolDeliver("root", "foo.bar", "message") +
                 " -> other.host:1234", sent);
     }
 
+    private boolean deliver(String context, String target, String message) {
+        return root.deliver(new Delivery(Path.parse(context), Path.parse(target), Path.parse(message)));
+    }
+
+    private String protocolDeliver(String context, String target, String message) {
+        return Protocol.deliver(new Delivery(Path.parse(context), Path.parse(target), Path.parse(message)));
+    }
+
+    private String protocolDeliver(String context, String target, String message, String role) {
+        return Protocol.deliver(new Delivery(Path.parse(context), Path.parse(target), Path.parse(message), Path.parse(role)));
+    }
+
     private class FakeServer implements Server {
+
         public String responded;
         private SignalListener listener;
-
         public void receive(String signal) {
             responded = listener.respondTo(signal);
         }
@@ -136,23 +148,23 @@ public class RunNodeSpec {
         public int getPort() {
             return 42;
         }
-    }
 
+    }
     private class FakeReaction implements Reaction {
+
         public Cell executed;
         public Path in;
-
         @Override
         public void execute(Cell cell, Delivery delivery) {
             executed = cell;
             in = delivery.getRole();
         }
-    }
 
+    }
     private class FakePeer implements Peer {
+
         private final String host;
         private final int port;
-
         public FakePeer(String host, int port) {
             this.host = host;
             this.port = port;
@@ -163,5 +175,6 @@ public class RunNodeSpec {
             sent = signal + " -> " + host + ":" + port;
             return Protocol.ok();
         }
+
     }
 }

@@ -42,8 +42,7 @@ public class InheritFromStemSpec {
 
     @Test
     public void noStem() {
-        Cell cell = new Cell();
-        assertFalse(cell.deliver(new Delivery(new Path(), new Path(), new Path())));
+        assertFalse(deliver(new Cell(), ""));
     }
 
     @Test
@@ -52,7 +51,7 @@ public class InheritFromStemSpec {
         root.createChild("sub").setStem(Path.parse("*.stem"));
         Cell stem = root.createChild("stem").setReaction(reaction);
 
-        assertTrue(root.deliver(new Delivery(Path.parse("*"), Path.parse("sub"), Path.parse("message"))));
+        assertTrue(deliver(root, "sub"));
         assertEquals(stem, executedBy);
         assertEquals(Path.parse("*.sub"), executedAs);
         assertEquals(Path.parse("^.message"), executedWith);
@@ -65,7 +64,7 @@ public class InheritFromStemSpec {
         root.createChild("bar").setStem(Path.parse("*.foo"));
         root.createChild("baz").setStem(Path.parse("*.bar"));
 
-        assertTrue(root.deliver(new Delivery(Path.parse("*"), Path.parse("baz"), Path.parse("message"))));
+        assertTrue(deliver(root, "baz"));
         assertEquals(stem, executedBy);
         assertEquals(Path.parse("*.baz"), executedAs);
         assertEquals(Path.parse("^.message"), executedWith);
@@ -76,7 +75,7 @@ public class InheritFromStemSpec {
         Cell root = new Cell();
         root.createChild("foo").setStem(Path.parse("*.not"));
 
-        assertFalse(root.deliver(new Delivery(Path.parse("*"), Path.parse("foo"), Path.parse("message"))));
+        assertFalse(deliver(root, "foo"));
     }
 
     @Test
@@ -85,7 +84,7 @@ public class InheritFromStemSpec {
         root.createChild("stem").joinedBy(peer);
         root.createChild("sub").setStem(Path.parse("*.stem"));
 
-        assertTrue(root.deliver(new Delivery(Path.parse("*"), Path.parse("sub"), Path.parse("message"))));
+        assertTrue(deliver(root, "sub"));
         assertEquals(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("stem"), Path.parse("message"), Path.parse("*.sub"))), sent);
     }
 
@@ -93,13 +92,17 @@ public class InheritFromStemSpec {
     public void childCannotBeStem() {
         Cell root = new Cell();
         root.createChild("foo").setStem(Path.parse("child"));
-        assertFalse(root.deliver(new Delivery(Path.parse("r"), Path.parse("foo"), Path.parse("m"))));
+        assertFalse(deliver(root, "foo"));
     }
 
     @Test
     public void childCannotBeSelf() {
         Cell root = new Cell();
         root.createChild("foo").setStem(Path.parse("*.foo.bar"));
-        assertFalse(root.deliver(new Delivery(Path.parse("*"), Path.parse("foo"), Path.parse("m"))));
+        assertFalse(deliver(root, "foo"));
+    }
+
+    private boolean deliver(Cell root, String target) {
+        return root.deliver(new Delivery(Path.parse("*"), Path.parse(target), Path.parse("message")));
     }
 }
