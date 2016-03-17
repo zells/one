@@ -138,6 +138,10 @@ public class RunNodeSpec extends Specification {
         }
 
         @Override
+        public void stopListening() {
+        }
+
+        @Override
         public Peer makePeer(String host, Integer port) {
             peer = new SpecPeer(host, port);
             return peer;
