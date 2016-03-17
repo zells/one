@@ -2,14 +2,12 @@ package org.zells.cli;
 
 import org.zells.node.Messenger;
 import org.zells.node.Node;
-import org.zells.node.io.SocketPeer;
 import org.zells.node.io.SocketServer;
+import org.zells.node.io.StandardProtocol;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.react.Mailing;
-import org.zells.node.model.refer.Child;
-import org.zells.node.model.refer.Path;
-import org.zells.node.model.refer.Root;
+import org.zells.node.model.refer.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,25 +15,26 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Shell {
 
     public static final String PROMPT = "z$ ";
     private final Path self;
     private final Cell root;
-    private final String host;
-    private final int port;
+    private final SocketServer server;
 
-    public Shell(String name, String myHost, int myPort, String remoteHost, int remotePort) {
-        host = myHost;
-        port = myPort;
+    public Shell(String name, String myHost, int myPort, String remoteHost, int remotePort) throws IOException {
+        server = new SocketServer(new StandardProtocol(), myPort);
+
         Path myPath = new Path(Root.name(), Child.name(name));
 
         root = new Cell();
-        root.join(new SocketPeer(remoteHost, remotePort), myPath, host, port);
+        root.join(server.makePeer(remoteHost, remotePort), myPath, myHost, myPort);
         root.putChild(name, new PrintMessage(root, System.out));
 
-        self = Path.parse(name).in(Root.name());
+        self = new Path(Root.name(), Child.name(name));
     }
 
     public static void main(String[] args) throws Exception {
@@ -44,7 +43,7 @@ public class Shell {
     }
 
     private void run() throws Exception {
-        new Thread(new Node(root, new SocketServer(host, port))).start();
+        new Thread(new Node(root, server)).start();
         deliverInput();
     }
 
@@ -56,25 +55,46 @@ public class Shell {
 
         String input;
         while ((input = in.readLine()) != null) {
-            try {
-                Mailing mailing = Mailing.parse(input);
-                final Path target = mailing.getTarget().in(self);
-                final Path message = mailing.getMessage().in(self);
-
-                new Messenger()
-                        .deliver(root, new Delivery(new Path(Root.name()), target, message))
-                        .whenFailed(new Runnable() {
-                            @Override
-                            public void run() {
-                                System.err.println();
-                                System.err.println("Delivery failed: " + target + " " + message);
-                                System.err.print(PROMPT);
-                            }
-                        });
-            } catch (Exception ignored) {
+            if (input.trim().isEmpty()) {
+                continue;
             }
+
+            String[] targetMessage = input.split(" ");
+
+            final Path target = path(targetMessage[0]).in(self);
+            final Path message;
+            if (targetMessage.length < 2) {
+                message = self;
+            } else {
+                message = path(targetMessage[1]).in(self);
+            }
+
+            new Messenger()
+                    .deliver(root, new Delivery(new Path(Root.name()), target, message))
+                    .whenFailed(new Runnable() {
+                        @Override
+                        public void run() {
+                            System.err.println();
+                            System.err.println("Delivery failed: " + target + " " + message);
+                            System.err.print(PROMPT);
+                        }
+                    });
 
             out.print(PROMPT);
         }
+    }
+
+    protected Path path(String s) {
+        List<Name> names = new ArrayList<Name>();
+        for (String part : s.split("\\.")) {
+            if (part.equals("*")) {
+                names.add(Root.name());
+            } else if (part.equals("^")) {
+                names.add(Parent.name());
+            } else if (!part.isEmpty()) {
+                names.add(Child.name(part));
+            }
+        }
+        return new Path(names);
     }
 }

@@ -13,6 +13,6 @@ public class Parent implements Name {
 
     @Override
     public String toString() {
-        return "^";
+        return "parent";
     }
 }

@@ -1,24 +1,14 @@
 package org.zells.node;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
-import org.zells.node.model.react.Reaction;
-import org.zells.node.model.refer.Child;
-import org.zells.node.model.refer.Path;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
-public class DeliverLocallySpec {
-
-    private TestReaction response;
-
-    @Before
-    public void setUp() {
-        response = new TestReaction();
-    }
+public class DeliverLocallySpec extends Specification {
 
     @Test
     public void noResponse() {
@@ -27,13 +17,13 @@ public class DeliverLocallySpec {
 
     @Test
     public void executeResponse() {
-        Cell root = new Cell().setReaction(response);
+        Cell root = new Cell().setReaction(reaction);
 
         deliver(root, "foo", "", "bar");
 
-        assertEquals(root, response.cell);
-        assertEquals(Path.parse("foo"), response.context);
-        assertEquals(Path.parse("bar"), response.message);
+        assertEquals(root, reaction.executedBy);
+        assertEquals(path("foo"), reaction.executedWith.getContext());
+        assertEquals(path("bar"), reaction.executedWith.getMessage());
     }
 
     @Test
@@ -52,71 +42,58 @@ public class DeliverLocallySpec {
     @Test
     public void deliverToChild() {
         Cell root = new Cell();
-        Cell foo = root.createChild("foo").setReaction(response);
+        Cell foo = root.createChild("foo").setReaction(reaction);
 
         deliver(root, "me", "foo", "message");
 
-        assertEquals(foo, response.cell);
-        assertEquals(Path.parse("me.foo"), response.context);
-        assertEquals(Path.parse("^.message"), response.message);
+        assertEquals(foo, reaction.executedBy);
+        assertEquals(path("me.foo"), reaction.executedWith.getContext());
+        assertEquals(path("^.message"), reaction.executedWith.getMessage());
     }
 
     @Test
     public void replaceChild() {
         Cell root = new Cell();
 
-        root.createChild("foo").setReaction(response);
-        Cell replaced = root.createChild("foo").setReaction(response);
+        root.createChild("foo").setReaction(reaction);
+        Cell replaced = root.createChild("foo").setReaction(reaction);
 
         deliver(root, "me", "foo", "message");
 
-        assertEquals(replaced, response.cell);
-        assertEquals(Path.parse("me.foo"), response.context);
-        assertEquals(Path.parse("^.message"), response.message);
+        assertEquals(replaced, reaction.executedBy);
+        assertEquals(path("me.foo"), reaction.executedWith.getContext());
+        assertEquals(path("^.message"), reaction.executedWith.getMessage());
     }
 
     @Test
     public void deliverToParent() {
-        Cell root = new Cell().setReaction(response);
+        Cell root = new Cell().setReaction(reaction);
         Cell foo = root.createChild("foo");
 
         deliver(foo, "parent.child", "^", "message");
 
-        assertEquals(root, response.cell);
-        assertEquals(Path.parse("parent"), response.context);
-        assertEquals(Path.parse("child.message"), response.message);
+        assertEquals(root, reaction.executedBy);
+        assertEquals(path("parent"), reaction.executedWith.getContext());
+        assertEquals(path("child.message"), reaction.executedWith.getMessage());
     }
 
     @Test
     public void deliverToRoot() {
-        Cell root = new Cell().setReaction(response);
+        Cell root = new Cell().setReaction(reaction);
         Cell foo = root.createChild("foo");
         Cell bar = foo.createChild("bar");
 
         deliver(bar, "one.two.three", "*", "message");
 
-        assertEquals(root, response.cell);
-        assertEquals(Path.parse("one"), response.context);
-        assertEquals(Path.parse("two.three.message"), response.message);
+        assertEquals(root, reaction.executedBy);
+        assertEquals(path("one"), reaction.executedWith.getContext());
+        assertEquals(path("two.three.message"), reaction.executedWith.getMessage());
     }
 
     private boolean deliver(Cell root, String context, String target, String message) {
         return root.deliver(new Delivery(
-                Path.parse(context),
-                Path.parse(target),
-                Path.parse(message)));
-    }
-
-    private class TestReaction implements Reaction {
-        public Path message;
-        public Cell cell;
-        public Path context;
-
-        @Override
-        public void execute(Cell cell, Delivery delivery) {
-            this.cell = cell;
-            this.context = delivery.getContext();
-            this.message = delivery.getMessage();
-        }
+                path(context),
+                path(target),
+                path(message)));
     }
 }

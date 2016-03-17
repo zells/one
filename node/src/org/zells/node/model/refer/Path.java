@@ -1,7 +1,5 @@
 package org.zells.node.model.refer;
 
-import org.zells.node.io.PathParser;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -77,15 +75,6 @@ public class Path {
         return names.isEmpty();
     }
 
-    public static Path parse(String string) {
-        return PathParser.parseOne(string);
-    }
-
-    @Override
-    public String toString() {
-        return PathParser.serialize(names);
-    }
-
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Path && ((Path) obj).names.equals(names);
@@ -94,5 +83,23 @@ public class Path {
     @Override
     public int hashCode() {
         return names.hashCode();
+    }
+
+    public List<Name> getNames() {
+        return names;
+    }
+
+    @Override
+    public String toString() {
+        return names.toString();
+    }
+
+    public boolean isIn(Path path) {
+        for (int i = 0; i < path.names.size(); i++) {
+            if (i == names.size() || !names.get(i).equals(path.names.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }

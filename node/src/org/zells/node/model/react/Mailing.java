@@ -1,9 +1,6 @@
 package org.zells.node.model.react;
 
-import org.zells.node.io.PathParser;
 import org.zells.node.model.refer.Path;
-
-import java.util.List;
 
 public class Mailing {
 
@@ -13,22 +10,6 @@ public class Mailing {
     public Mailing(Path target, Path message) {
         this.target = target;
         this.message = message;
-    }
-
-    public static Mailing parse(String string) throws Exception {
-        List<Path> paths = PathParser.parse(string);
-
-        if (paths.isEmpty()) {
-            throw new Exception("Empty input");
-        }
-
-        Path target = paths.get(0);
-        Path message = new Path();
-        if (paths.size() == 2) {
-            message = paths.get(1);
-        }
-
-        return new Mailing(target, message);
     }
 
     public Path getTarget() {
@@ -49,10 +30,5 @@ public class Mailing {
     @Override
     public int hashCode() {
         return target.hashCode() + message.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return PathParser.serialize(target, message);
     }
 }

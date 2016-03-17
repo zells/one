@@ -54,10 +54,10 @@ public class Messenger extends Thread {
             }
         }
 
-        isDelivering = false;
         if (!delivered && whenFailed != null) {
             whenFailed.run();
         }
+        isDelivering = false;
     }
 
     public boolean hasDelivered() {

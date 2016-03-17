@@ -4,18 +4,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
-import org.zells.node.model.react.Reaction;
-import org.zells.node.model.refer.Path;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class RetryDeliveriesSpec {
+public class RetryDeliveriesSpec extends Specification {
 
-    private Delivery executed;
-    private Reaction reaction;
     private Cell root;
     private List<Long> tries;
     private long last = 0;
@@ -23,14 +19,8 @@ public class RetryDeliveriesSpec {
 
     @Before
     public void setUp() throws Exception {
+        super.setUp();
         tries = new ArrayList<Long>();
-
-        reaction = new Reaction() {
-            @Override
-            public void execute(Cell cell, Delivery delivery) {
-                executed = delivery;
-            }
-        };
         root = new Cell();
     }
 
@@ -68,7 +58,7 @@ public class RetryDeliveriesSpec {
 
         assertTrue(m.hasDelivered());
         assertFalse(m.isDelivering());
-        assertEquals(Path.parse("c.foo"), executed.getRole());
+        assertEquals(path("c.foo"), reaction.executedWith.getRole());
     }
 
     @Test
@@ -89,7 +79,7 @@ public class RetryDeliveriesSpec {
     }
 
     private Messenger deliver(Messenger m) {
-        return m.deliver(root, new Delivery(Path.parse("c"), Path.parse("foo"), Path.parse("m")));
+        return m.deliver(root, new Delivery(path("c"), path("foo"), path("m")));
     }
 
     private class CountingCell extends Cell {

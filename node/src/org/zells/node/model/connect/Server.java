@@ -1,6 +1,4 @@
-package org.zells.node.io;
-
-import org.zells.node.model.connect.Peer;
+package org.zells.node.model.connect;
 
 public interface Server {
 
@@ -8,7 +6,5 @@ public interface Server {
 
     Peer makePeer(String host, Integer port);
 
-    String getHost();
-
-    int getPort();
+    Protocol getProtocol();
 }

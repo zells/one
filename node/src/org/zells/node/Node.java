@@ -1,18 +1,18 @@
 package org.zells.node;
 
-import org.zells.node.io.Server;
-import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
-import org.zells.node.model.connect.Peer;
-import org.zells.node.model.connect.Protocol;
-import org.zells.node.model.react.Delivery;
-import org.zells.node.model.refer.*;
+import org.zells.node.model.connect.*;
+import org.zells.node.model.connect.signals.DeliverSignal;
+import org.zells.node.model.connect.signals.JoinSignal;
+import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.Name;
+import org.zells.node.model.refer.Path;
 
 import java.io.PrintStream;
 
 public class Node implements Runnable, SignalListener {
 
-    private final Cell root;
+    private Cell root;
     private Server server;
     private PrintStream error = System.err;
 
@@ -31,41 +31,37 @@ public class Node implements Runnable, SignalListener {
     }
 
     @Override
-    public String respondTo(String signal) {
+    public Signal respondTo(Signal signal) {
         try {
             return handleSignal(signal)
-                    ? Protocol.ok()
-                    : Protocol.fail(signal);
+                    ? server.getProtocol().ok()
+                    : server.getProtocol().fail(signal.serialize());
         } catch (Exception e) {
             e.printStackTrace(error);
-            return Protocol.fail(e.getMessage());
+            return server.getProtocol().fail(e.getMessage());
         }
     }
 
-    private boolean handleSignal(String signal) throws Exception {
-        if (Protocol.isDeliver(signal)) {
-            return handleDeliver(Protocol.parseDeliver(signal));
-        } else if (Protocol.isJoin(signal)) {
-            return handleJoin(Protocol.parseJoin(signal));
+    private boolean handleSignal(Signal signal) throws Exception {
+        if (signal instanceof DeliverSignal) {
+            return handleDeliver((DeliverSignal) signal);
+        } else if (signal instanceof JoinSignal) {
+            return handleJoin((JoinSignal) signal);
         }
 
         throw new Exception("Unknown signal");
     }
 
-    private boolean handleDeliver(Object[] parameters) throws Exception {
-        Path target = (Path) parameters[0];
-        Path message = (Path) parameters[1];
-        Path role = (Path) parameters[2];
-
+    private boolean handleDeliver(DeliverSignal signal) throws Exception {
         return new Messenger()
-                .deliver(root, new Delivery(new Path(target.first()), target.rest(), message.rest(), role))
+                .deliver(root, signal.getDelivery())
                 .waitForIt()
                 .hasDelivered();
     }
 
-    private boolean handleJoin(Object[] parameters) throws Exception {
-        Peer peer = server.makePeer((String) parameters[1], (Integer) parameters[2]);
-        resolve((Path) parameters[0], root).joinedBy(peer);
+    private boolean handleJoin(JoinSignal signal) throws Exception {
+        Peer peer = server.makePeer(signal.getHost(), signal.getPort());
+        resolve(signal.getPath(), root).joinedBy(peer);
         return true;
     }
 

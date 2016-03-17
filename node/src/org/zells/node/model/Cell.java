@@ -1,11 +1,10 @@
 package org.zells.node.model;
 
 import org.zells.node.model.connect.Peer;
-import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.connect.signals.OkSignal;
 import org.zells.node.model.react.Delivery;
-import org.zells.node.model.refer.*;
 import org.zells.node.model.react.Reaction;
-import org.zells.node.model.refer.Path;
+import org.zells.node.model.refer.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,7 +58,7 @@ public class Cell {
     }
 
     public Cell join(Peer peer, Path myPath, String myHost, int myPort) {
-        peer.send(Protocol.join(myPath, myHost, myPort));
+        peer.send(peer.getProtocol().join(myPath, myHost, myPort));
         return joinedBy(peer);
     }
 
@@ -124,7 +123,7 @@ public class Cell {
 
     private boolean deliverToPeers(Delivery delivery) {
         for (Peer peer : peers) {
-            if (peer.send(Protocol.deliver(delivery)).equals(Protocol.ok())) {
+            if (peer.send(peer.getProtocol().deliver(delivery)) instanceof OkSignal) {
                 return true;
             }
         }
@@ -136,7 +135,7 @@ public class Cell {
     private boolean deliverToStem(Delivery delivery) {
         return stem != null
                 && !(stem.first() instanceof Child)
-                && !stem.toString().startsWith(delivery.getContext().toString())
+                && !stem.isIn(delivery.getContext())
                 && parent != null
                 && parent.deliver(delivery.toStem(stem))
                 && adopt(delivery);

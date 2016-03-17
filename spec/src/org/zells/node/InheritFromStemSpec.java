@@ -1,44 +1,16 @@
 package org.zells.node;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.zells.node.model.Cell;
-import org.zells.node.model.connect.Peer;
-import org.zells.node.model.connect.Protocol;
 import org.zells.node.model.react.Delivery;
-import org.zells.node.model.react.Reaction;
 import org.zells.node.model.refer.Path;
+import org.zells.node.model.refer.Root;
 
 import static org.junit.Assert.*;
 
-public class InheritFromStemSpec {
-
-    private Cell executedBy;
-    private Path executedAs;
-    private Path executedWith;
-    private Reaction reaction;
-    private Peer peer;
-    private String sent;
-
-    @Before
-    public void setUp() throws Exception {
-        reaction = new Reaction() {
-            @Override
-            public void execute(Cell cell, Delivery delivery) {
-                executedBy = cell;
-                executedAs = delivery.getRole();
-                executedWith = delivery.getMessage();
-            }
-        };
-
-        peer = new Peer() {
-            @Override
-            public String send(String signal) {
-                sent = signal;
-                return Protocol.ok();
-            }
-        };
-    }
+public class InheritFromStemSpec extends Specification {
 
     @Test
     public void noStem() {
@@ -48,61 +20,63 @@ public class InheritFromStemSpec {
     @Test
     public void executeStem() {
         Cell root = new Cell();
-        root.createChild("sub").setStem(Path.parse("*.stem"));
+        root.createChild("sub").setStem(path("*.stem"));
         Cell stem = root.createChild("stem").setReaction(reaction);
 
         assertTrue(deliver(root, "sub"));
-        assertEquals(stem, executedBy);
-        assertEquals(Path.parse("*.sub"), executedAs);
-        assertEquals(Path.parse("^.message"), executedWith);
+        assertEquals(stem, reaction.executedBy);
+        assertEquals(path("*.sub"), reaction.executedWith.getRole());
+        assertEquals(path("^.message"), reaction.executedWith.getMessage());
     }
 
     @Test
     public void executeStemOfStem() {
         Cell root = new Cell();
         Cell stem = root.createChild("foo").setReaction(reaction);
-        root.createChild("bar").setStem(Path.parse("*.foo"));
-        root.createChild("baz").setStem(Path.parse("*.bar"));
+        root.createChild("bar").setStem(path("*.foo"));
+        root.createChild("baz").setStem(path("*.bar"));
 
         assertTrue(deliver(root, "baz"));
-        assertEquals(stem, executedBy);
-        assertEquals(Path.parse("*.baz"), executedAs);
-        assertEquals(Path.parse("^.message"), executedWith);
+        assertEquals(stem, reaction.executedBy);
+        assertEquals(path("*.baz"), reaction.executedWith.getRole());
+        assertEquals(path("^.message"), reaction.executedWith.getMessage());
     }
 
     @Test
     public void nonExistingStem() {
         Cell root = new Cell();
-        root.createChild("foo").setStem(Path.parse("*.not"));
+        root.createChild("foo").setStem(path("*.not"));
 
         assertFalse(deliver(root, "foo"));
     }
 
     @Test
     public void remoteStem() {
+        SpecPeer peer = new SpecPeer();
+
         Cell root = new Cell();
         root.createChild("stem").joinedBy(peer);
-        root.createChild("sub").setStem(Path.parse("*.stem"));
+        root.createChild("sub").setStem(path("*.stem"));
 
         assertTrue(deliver(root, "sub"));
-        assertEquals(Protocol.deliver(new Delivery(Path.parse("*"), Path.parse("stem"), Path.parse("message"), Path.parse("*.sub"))), sent);
+        assertEquals(protocol.deliver(new Delivery(path("*.stem"), path(""), path("^.message"), path("*.sub"))), peer.sent);
     }
 
     @Test
-    public void childCannotBeStem() {
+    public void stemCannotBeChild() {
         Cell root = new Cell();
-        root.createChild("foo").setStem(Path.parse("child"));
+        root.createChild("foo").setStem(path("child"));
         assertFalse(deliver(root, "foo"));
     }
 
     @Test
-    public void childCannotBeSelf() {
+    public void stemCannotBeSelf() {
         Cell root = new Cell();
-        root.createChild("foo").setStem(Path.parse("*.foo.bar"));
+        root.createChild("foo").setStem(path("*.foo.bar"));
         assertFalse(deliver(root, "foo"));
     }
 
     private boolean deliver(Cell root, String target) {
-        return root.deliver(new Delivery(Path.parse("*"), Path.parse(target), Path.parse("message")));
+        return root.deliver(new Delivery(new Path(Root.name()), path(target), path("message")));
     }
 }

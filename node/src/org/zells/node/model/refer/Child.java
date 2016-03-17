@@ -13,11 +13,6 @@ public class Child implements Name {
     }
 
     @Override
-    public String toString() {
-        return name;
-    }
-
-    @Override
     public boolean equals(Object obj) {
         return obj instanceof Child && ((Child) obj).name.equals(name);
     }
@@ -25,5 +20,14 @@ public class Child implements Name {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

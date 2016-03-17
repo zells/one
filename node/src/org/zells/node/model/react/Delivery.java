@@ -61,4 +61,18 @@ public class Delivery {
     public Delivery toSelf() {
         return new Delivery(context, target.rest(), message, role);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Delivery
+                && context.equals(((Delivery) obj).context)
+                && target.equals(((Delivery)obj).target)
+                && message.equals(((Delivery) obj).message)
+                && role.equals(((Delivery) obj).role);
+    }
+
+    @Override
+    public int hashCode() {
+        return context.hashCode() + target.hashCode() + message.hashCode() + role.hashCode();
+    }
 }

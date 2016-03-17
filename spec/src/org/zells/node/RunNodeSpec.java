@@ -2,130 +2,133 @@ package org.zells.node;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.zells.node.io.Server;
-import org.zells.node.io.SignalListener;
 import org.zells.node.model.Cell;
-import org.zells.node.model.connect.Peer;
-import org.zells.node.model.connect.Protocol;
+import org.zells.node.model.connect.*;
 import org.zells.node.model.react.Delivery;
-import org.zells.node.model.react.Reaction;
-import org.zells.node.model.refer.Path;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-public class RunNodeSpec {
+public class RunNodeSpec extends Specification {
 
-    private String sent;
     private final PrintStream error = new PrintStream(new ByteArrayOutputStream());
-    private FakeServer server;
+    private SpecServer server;
     private Cell root;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         root = new Cell();
-        server = new FakeServer();
+        server = new SpecServer();
         new Node(root, server).setErrorStream(error).run();
     }
 
     @Test
     public void unknownSignal() {
-        server.receive("foo");
-        assertEquals(Protocol.fail("Unknown signal"), server.responded);
+        try {
+            protocol.parse("foo");
+        } catch (IOException e) {
+            assertEquals("Signal not recognized", e.getMessage());
+            return;
+        }
+        fail("No exception thrown");
     }
 
     @Test
     public void malformedSignal() {
-        server.receive("DELIVER foo");
-        assertEquals(Protocol.fail("Malformed signal"), server.responded);
+        try {
+            protocol.parse("DELIVER foo");
+        } catch (IOException e) {
+            assertEquals("Malformed signal", e.getMessage());
+            return;
+        }
+        fail("No exception thrown");
     }
 
     @Test
     public void cannotDeliver() {
         server.receive(protocolDeliver("*", "foo", "message"));
-        assertEquals(Protocol.fail("DELIVER *.foo *.message *.foo"), server.responded);
+        assertEquals(protocol.fail("DELIVER *.foo *.message *.foo"), server.responded);
     }
 
     @Test
     public void deliverMessage() {
-        FakeReaction response = new FakeReaction();
-
         Cell cell = root.createChild("foo");
-        Cell child = cell.createChild("bar").setReaction(response);
+        Cell child = cell.createChild("bar").setReaction(reaction);
 
         server.receive(protocolDeliver("root", "foo.bar", "foo.message"));
 
-        assertEquals(Protocol.ok(), server.responded);
-        assertEquals(child, response.executed);
+        assertEquals(protocol.ok(), server.responded);
+        assertEquals(child, reaction.executedBy);
     }
 
     @Test
     public void executeInRole() {
-        FakeReaction response = new FakeReaction();
-
         Cell cell = root.createChild("foo");
-        cell.createChild("bar").setReaction(response);
+        cell.createChild("bar").setReaction(reaction);
 
         server.receive(protocolDeliver("root", "foo.bar", "foo.message", "some.role"));
 
-        assertEquals(Protocol.ok(), server.responded);
-        assertEquals(Path.parse("some.role"), response.in);
+        assertEquals(protocol.ok(), server.responded);
+        assertEquals(path("some.role"), reaction.executedWith.getRole());
     }
 
     @Test
     public void deliverToNonCanonicalPath() {
-        FakeReaction response = new FakeReaction();
-
         Cell foo = root.createChild("foo");
-        Cell bar = foo.createChild("bar").setReaction(response);
+        Cell bar = foo.createChild("bar").setReaction(reaction);
 
-        server.receive(protocolDeliver("root.*.foo.bar.^.^.foo.^.foo.*.foo", "bar", "message"));
+        server.receive(protocolDeliver("root", "*.foo.bar.^.^.foo.^.foo.*.foo.bar", "message"));
 
-        assertEquals(Protocol.ok(), server.responded);
-        assertEquals(bar, response.executed);
+        assertEquals(protocol.ok(), server.responded);
+        assertEquals(bar, reaction.executedBy);
     }
 
     @Test
     public void letJoinNewCell() {
-        server.receive(Protocol.join(Path.parse("root.foo.bar"), "other.host", 1234));
-        assertEquals(Protocol.ok(), server.responded);
+        server.receive(protocol.join(path("root.foo.bar"), "other.host", 1234));
+        assertEquals(protocol.ok(), server.responded);
 
         deliver("root", "foo.bar.baz", "message");
-        assertEquals(protocolDeliver("root", "foo.bar.baz", "message") +
-                " -> other.host:1234", sent);
+        assertEquals(protocolDeliver("root.foo.bar", "baz", "^.^.message"), server.peer.sent);
+        assertEquals("other.host:1234", server.peer.sentTo);
     }
 
     @Test
     public void letJoinExistingCell() {
         root.createChild("foo");
 
-        server.receive(Protocol.join(Path.parse("root.foo"), "other.host", 1234));
-        assertEquals(Protocol.ok(), server.responded);
+        server.receive(protocol.join(path("root.foo"), "other.host", 1234));
+        assertEquals(protocol.ok(), server.responded);
 
         deliver("root", "foo.bar", "message");
-        assertEquals(protocolDeliver("root", "foo.bar", "message") +
-                " -> other.host:1234", sent);
+        assertEquals(protocolDeliver("root.foo", "bar", "^.message"), server.peer.sent);
+        assertEquals("other.host:1234", server.peer.sentTo);
     }
 
     private boolean deliver(String context, String target, String message) {
-        return root.deliver(new Delivery(Path.parse(context), Path.parse(target), Path.parse(message)));
+        return root.deliver(new Delivery(path(context), path(target), path(message)));
     }
 
-    private String protocolDeliver(String context, String target, String message) {
-        return Protocol.deliver(new Delivery(Path.parse(context), Path.parse(target), Path.parse(message)));
+    private Signal protocolDeliver(String context, String target, String message) {
+        return protocol.deliver(new Delivery(path(context), path(target), path(message)));
     }
 
-    private String protocolDeliver(String context, String target, String message, String role) {
-        return Protocol.deliver(new Delivery(Path.parse(context), Path.parse(target), Path.parse(message), Path.parse(role)));
+    private Signal protocolDeliver(String context, String target, String message, String role) {
+        return protocol.deliver(new Delivery(path(context), path(target), path(message), path(role)));
     }
 
-    private class FakeServer implements Server {
+    private class SpecServer implements Server {
 
-        public String responded;
+        public SpecPeer peer;
+        public Signal responded;
         private SignalListener listener;
-        public void receive(String signal) {
+
+        public void receive(Signal signal) {
             responded = listener.respondTo(signal);
         }
 
@@ -136,45 +139,13 @@ public class RunNodeSpec {
 
         @Override
         public Peer makePeer(String host, Integer port) {
-            return new FakePeer(host, port);
+            peer = new SpecPeer(host, port);
+            return peer;
         }
 
         @Override
-        public String getHost() {
-            return "other.host";
+        public Protocol getProtocol() {
+            return protocol;
         }
-
-        @Override
-        public int getPort() {
-            return 42;
-        }
-
-    }
-    private class FakeReaction implements Reaction {
-
-        public Cell executed;
-        public Path in;
-        @Override
-        public void execute(Cell cell, Delivery delivery) {
-            executed = cell;
-            in = delivery.getRole();
-        }
-
-    }
-    private class FakePeer implements Peer {
-
-        private final String host;
-        private final int port;
-        public FakePeer(String host, int port) {
-            this.host = host;
-            this.port = port;
-        }
-
-        @Override
-        public String send(String signal) {
-            sent = signal + " -> " + host + ":" + port;
-            return Protocol.ok();
-        }
-
     }
 }
