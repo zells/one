@@ -11,8 +11,11 @@ import org.zells.node.model.refer.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 public class StandardProtocol implements Protocol {
+
+    public static final char ESCAPE = '+';
 
     public Signal ok() {
         return new StandardOkSignal();
@@ -54,7 +57,7 @@ public class StandardProtocol implements Protocol {
             } else if (n instanceof Parent) {
                 serialized.append("^");
             } else if (n instanceof Child) {
-                serialized.append(((Child) n).getName());
+                serialized.append(escape(((Child) n).getName()));
             } else {
                 throw new IOException("Could not serialize path");
             }
@@ -63,7 +66,7 @@ public class StandardProtocol implements Protocol {
         return serialized.toString().substring(1);
     }
 
-    private static Path inflatePath(String string) {
+    private static Path parsePath(String string) {
         Path path = new Path();
         for (String s : string.split("\\.")) {
             if (s.equals("*")) {
@@ -71,11 +74,47 @@ public class StandardProtocol implements Protocol {
             } else if (s.equals("^")) {
                 path = path.with(Parent.name());
             } else {
-                path = path.with(Child.name(s));
+                path = path.with(Child.name(unEscape(s)));
             }
         }
 
         return path;
+    }
+
+    private static String escape(String string) {
+        List<Character> specialCharacters = Arrays.asList('^', '*', ':', '_', ESCAPE);
+        StringBuilder escaped = new StringBuilder();
+        for (char c : string.toCharArray()) {
+            if (specialCharacters.contains(c)) {
+                escaped.append(ESCAPE);
+            } else if (c == ' ') {
+                c = '_';
+            }  else if (c == '.') {
+                c = ':';
+            }
+            escaped.append(c);
+        }
+        return escaped.toString();
+    }
+
+    private static String unEscape(String string) {
+        boolean escaped = false;
+        StringBuilder unescaped = new StringBuilder();
+        for (char c : string.toCharArray()) {
+            if (!escaped && c == ESCAPE) {
+                escaped = true;
+            } else {
+                if (!escaped && c == ':') {
+                    c = '.';
+                } else if (!escaped && c == '_') {
+                    c = ' ';
+                }
+
+                unescaped.append(c);
+                escaped = false;
+            }
+        }
+        return unescaped.toString();
     }
 
     private static class StandardOkSignal extends OkSignal {
@@ -155,10 +194,10 @@ public class StandardProtocol implements Protocol {
         public String toString() {
             try {
                 return Arrays.asList(new String[]{
-                    serializePath(delivery.getContext()),
-                    serializePath(delivery.getTarget()),
-                    serializePath(delivery.getMessage()),
-                    serializePath(delivery.getRole())
+                        serializePath(delivery.getContext()),
+                        serializePath(delivery.getTarget()),
+                        serializePath(delivery.getMessage()),
+                        serializePath(delivery.getRole())
                 }).toString();
             } catch (IOException e) {
                 return e.getMessage();
@@ -176,9 +215,9 @@ public class StandardProtocol implements Protocol {
             }
             return new StandardDeliverSignal(new Delivery(
                     new Path(Root.name()),
-                    inflatePath(parts[1]).rest(),
-                    inflatePath(parts[2]).rest(),
-                    inflatePath(parts[3])
+                    parsePath(parts[1]).rest(),
+                    parsePath(parts[2]).rest(),
+                    parsePath(parts[3])
             ));
         }
     }
@@ -228,7 +267,7 @@ public class StandardProtocol implements Protocol {
                 throw new IOException("Malformed signal");
             }
             return new StandardJoinSignal(
-                    inflatePath(parts[1]),
+                    parsePath(parts[1]),
                     parts[2],
                     Integer.parseInt(parts[3])
             );
