@@ -1,12 +1,10 @@
 package org.zells.node;
 
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.Path;
-import org.zells.node.model.refer.Root;
+import org.zells.node.model.refer.names.Root;
 
 import static org.junit.Assert.*;
 

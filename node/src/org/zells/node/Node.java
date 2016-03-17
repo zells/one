@@ -4,7 +4,7 @@ import org.zells.node.model.Cell;
 import org.zells.node.model.connect.*;
 import org.zells.node.model.connect.signals.DeliverSignal;
 import org.zells.node.model.connect.signals.JoinSignal;
-import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.names.Child;
 import org.zells.node.model.refer.Name;
 import org.zells.node.model.refer.Path;
 

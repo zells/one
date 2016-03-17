@@ -4,7 +4,7 @@ import org.zells.node.model.connect.Signal;
 import org.zells.node.model.connect.signals.DeliverSignal;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.Path;
-import org.zells.node.model.refer.Root;
+import org.zells.node.model.refer.names.Root;
 
 import java.io.IOException;
 import java.util.Arrays;

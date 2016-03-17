@@ -1,7 +1,7 @@
 package org.zells.node.model.react;
 
 import org.zells.node.model.refer.Name;
-import org.zells.node.model.refer.Parent;
+import org.zells.node.model.refer.names.Parent;
 import org.zells.node.model.refer.Path;
 
 public class Delivery {

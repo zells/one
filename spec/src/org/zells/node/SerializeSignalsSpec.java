@@ -1,12 +1,11 @@
 package org.zells.node;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.zells.node.model.connect.Signal;
-import org.zells.node.model.refer.Child;
-import org.zells.node.model.refer.Parent;
+import org.zells.node.model.refer.names.Child;
+import org.zells.node.model.refer.names.Parent;
 import org.zells.node.model.refer.Path;
-import org.zells.node.model.refer.Root;
+import org.zells.node.model.refer.names.Root;
 
 import java.io.IOException;
 

@@ -1,4 +1,6 @@
-package org.zells.node.model.refer;
+package org.zells.node.model.refer.names;
+
+import org.zells.node.model.refer.Name;
 
 public class Child implements Name {
 

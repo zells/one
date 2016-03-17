@@ -1,4 +1,6 @@
-package org.zells.node.model.refer;
+package org.zells.node.model.refer.names;
+
+import org.zells.node.model.refer.Name;
 
 public class Parent implements Name {
 
@@ -13,6 +15,6 @@ public class Parent implements Name {
 
     @Override
     public String toString() {
-        return "parent";
+        return "<parent>";
     }
 }

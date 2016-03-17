@@ -3,7 +3,7 @@ package org.zells.node;
 import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
-import org.zells.node.model.refer.Child;
+import org.zells.node.model.refer.names.Child;
 
 import static org.junit.Assert.*;
 
