@@ -42,7 +42,7 @@ public class Shell {
     }
 
     private void run() throws Exception {
-        new Thread(new Node(root, server)).start();
+        new Node(root, server).run();
         deliverInput();
     }
 

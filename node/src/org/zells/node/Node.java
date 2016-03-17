@@ -10,7 +10,7 @@ import org.zells.node.model.refer.Path;
 
 import java.io.PrintStream;
 
-public class Node implements Runnable, SignalListener {
+public class Node implements SignalListener {
 
     private Cell root;
     private Server server;

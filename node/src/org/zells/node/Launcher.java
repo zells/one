@@ -8,7 +8,9 @@ import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.Root;
 import org.zells.node.model.react.Reaction;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class Launcher {
 
@@ -18,8 +20,31 @@ public class Launcher {
 
         int port = 12345;
 
+        final SocketServer server = new SocketServer(new StandardProtocol(), port);
+
         System.out.println("Listening on " + port);
-        new Node(root, new SocketServer(new StandardProtocol(), port)).run();
+        new Node(root, server).run();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                System.out.println("Server stopped");
+                server.stopListening();
+            }
+        });
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+        System.out.println("Enter 'stop' to quit");
+        System.out.print("> ");
+
+        String input;
+        while ((input = reader.readLine()) != null) {
+            if (input.equals("stop")) {
+                System.exit(0);
+            }
+            System.out.print("> ");
+        }
     }
 
     private static class EchoMessage implements Reaction {
