@@ -1,13 +1,34 @@
 package org.zells.node.io;
 
 import org.zells.node.model.react.Mailing;
+import org.zells.node.model.refer.Name;
 import org.zells.node.model.refer.names.*;
 import org.zells.node.model.refer.Path;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ChiParser {
+
+    public static final char QUOTE = '"';
+    public static final char SEPARATOR = '.';
+
+    private static Map<Character, Name> names;
+    static {
+        names = new HashMap<Character, Name>();
+        names.put('*', Root.name());
+        names.put('^', Parent.name());
+        names.put('@', Message.name());
+        names.put('~', Execution.name());
+    }
+
+    private static Map<Character, Path> shortcuts;
+    static {
+        shortcuts = new HashMap<Character, Path>();
+        shortcuts.put('$', new Path(Root.name(), Child.name("zells"), Child.name("literals"), Child.name("strings")));
+        shortcuts.put('#', new Path(Root.name(), Child.name("zells"), Child.name("literals"), Child.name("numbers")));
+    }
+
+    private List<Character> whitespaces = Arrays.asList(' ', '\t');
 
     private final List<Mailing> mailings = new ArrayList<Mailing>();
     private List<Path> paths = new ArrayList<Path>();
@@ -25,39 +46,24 @@ public class ChiParser {
             line = line.trim() + " ";
 
             for (char c : line.toCharArray()) {
-                if (!quoted && c == '"') {
+                if (!quoted && c == QUOTE) {
                     quoted = true;
                     wasQuoted = true;
 
-                } else if (quoted && c == '"') {
+                } else if (quoted && c == QUOTE) {
                     quoted = false;
 
-                } else if (!quoted && name.toString().isEmpty() && c == '*') {
+                } else if (!quoted && name.toString().isEmpty() && names.containsKey(c)) {
                     name.append(c);
                     endName();
 
-                } else if (!quoted && name.toString().isEmpty() && c == '~') {
-                    name.append(c);
+                } else if (!quoted && name.toString().isEmpty() && path.isEmpty() && shortcuts.containsKey(c)) {
+                    path = shortcuts.get(c);
+
+                } else if (!quoted && (whitespaces.contains(c) || c == SEPARATOR)) {
                     endName();
 
-                } else if (!quoted && name.toString().isEmpty() && c == '^') {
-                    name.append(c);
-                    endName();
-
-                } else if (!quoted && name.toString().isEmpty() && c == '@') {
-                    name.append(c);
-                    endName();
-
-                } else if (!quoted && name.toString().isEmpty() && path.isEmpty() && c == '$') {
-                    path = new Path(Root.name(), Child.name("zells"), Child.name("literals"), Child.name("strings"));
-
-                } else if (!quoted && name.toString().isEmpty() && path.isEmpty() && c == '#') {
-                    path = new Path(Root.name(), Child.name("zells"), Child.name("literals"), Child.name("numbers"));
-
-                } else if (!quoted && (c == ' ' || c == '.' || c == '\t')) {
-                    endName();
-
-                    if (c == ' ' || c == '\t') {
+                    if (whitespaces.contains(c)) {
                         endPath();
                     }
 
@@ -90,14 +96,8 @@ public class ChiParser {
     private void endName() {
         String nameString = name.toString();
         if (!nameString.isEmpty()) {
-            if (!wasQuoted && nameString.equals("*")) {
-                path = path.with(Root.name());
-            } else if (!wasQuoted && nameString.equals("^")) {
-                path = path.with(Parent.name());
-            } else if (!wasQuoted && nameString.equals("~")) {
-                path = path.with(Execution.name());
-            } else if (!wasQuoted && nameString.equals("@")) {
-                path = path.with(Message.name());
+            if (!wasQuoted && nameString.length() == 1 && names.containsKey(nameString.charAt(0))) {
+                path = path.with(names.get(nameString.charAt(0)));
             } else {
                 path = path.with(Child.name(nameString));
             }
