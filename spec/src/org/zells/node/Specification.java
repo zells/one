@@ -1,7 +1,7 @@
 package org.zells.node;
 
 import org.junit.Before;
-import org.zells.node.io.StandardProtocol;
+import org.zells.node.io.protocol.StandardProtocol;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;

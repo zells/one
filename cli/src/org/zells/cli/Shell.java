@@ -2,8 +2,8 @@ package org.zells.cli;
 
 import org.zells.node.Messenger;
 import org.zells.node.Node;
-import org.zells.node.io.SocketServer;
-import org.zells.node.io.StandardProtocol;
+import org.zells.node.io.server.SocketServer;
+import org.zells.node.io.protocol.StandardProtocol;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.*;
