@@ -2,10 +2,12 @@ package org.zells.cli;
 
 import org.zells.node.Messenger;
 import org.zells.node.Node;
+import org.zells.node.io.ChiParser;
 import org.zells.node.io.server.SocketServer;
 import org.zells.node.io.protocol.StandardProtocol;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
+import org.zells.node.model.react.Mailing;
 import org.zells.node.model.refer.*;
 import org.zells.node.model.refer.names.Child;
 import org.zells.node.model.refer.names.Parent;
@@ -63,10 +65,6 @@ public class Shell {
 
         String input;
         while ((input = in.readLine()) != null) {
-            if (input.trim().isEmpty()) {
-                out.print(PROMPT);
-                continue;
-            }
 
             if (input.equals("!!")) {
                 out.println();
@@ -75,23 +73,23 @@ public class Shell {
                 System.exit(0);
             }
 
-            String[] targetMessage = input.split(" ");
+            final List<Mailing> mailings = new ChiParser().parse(input);
 
-            final Path target = path(targetMessage[0]).in(self);
-            final Path message;
-            if (targetMessage.length < 2) {
-                message = self;
-            } else {
-                message = path(targetMessage[1]).in(self);
+            if (mailings.size() != 1) {
+                out.print(PROMPT);
+                continue;
             }
 
             new Messenger()
-                    .deliver(root, new Delivery(new Path(Root.name()), target, message))
+                    .deliver(root, new Delivery(
+                            new Path(Root.name()),
+                            mailings.get(0).getTarget().in(self),
+                            mailings.get(0).getMessage().in(self)))
                     .whenFailed(new Runnable() {
                         @Override
                         public void run() {
                             System.err.println();
-                            System.err.println("Delivery failed: " + target + " " + message);
+                            System.err.println("Delivery failed: " + mailings.get(0));
                             System.err.print(PROMPT);
                         }
                     });

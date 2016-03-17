@@ -15,7 +15,6 @@ public class Node implements SignalListener {
     private final Cell root;
     private final Server server;
 
-    private Messenger messenger = new Messenger();
     private PrintStream error = System.err;
 
     public Node(Cell root, Server server) {
@@ -25,11 +24,6 @@ public class Node implements SignalListener {
 
     public Node setErrorStream(PrintStream stream) {
         error = stream;
-        return this;
-    }
-
-    public Node setMessenger(Messenger messenger) {
-        this.messenger = messenger;
         return this;
     }
 
@@ -60,7 +54,7 @@ public class Node implements SignalListener {
     }
 
     private boolean handleDeliver(DeliverSignal signal) throws Exception {
-        return messenger
+        return new Messenger()
                 .deliver(root, signal.getDelivery())
                 .waitForIt()
                 .hasDelivered();

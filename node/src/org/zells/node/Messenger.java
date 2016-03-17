@@ -5,7 +5,7 @@ import org.zells.node.model.react.Delivery;
 
 public class Messenger extends Thread {
 
-    private long timeOutMs = 1000;
+    private long timeOutMs = 100;
     private long waitMs;
     private double waitFactorBase = 1;
 

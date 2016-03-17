@@ -19,4 +19,9 @@ public class Mailing {
     public Path getMessage() {
         return message;
     }
+
+    @Override
+    public String toString() {
+        return target + " <- " + message;
+    }
 }

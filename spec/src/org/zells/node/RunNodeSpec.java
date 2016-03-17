@@ -26,8 +26,6 @@ public class RunNodeSpec extends Specification {
         server = new SpecServer();
         new Node(root, server)
                 .setErrorStream(error)
-                .setMessenger(new Messenger()
-                        .setTimeOutMs(1))
                 .run();
     }
 
