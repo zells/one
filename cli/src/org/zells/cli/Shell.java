@@ -50,12 +50,26 @@ public class Shell {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         PrintStream out = System.out;
 
+        out.println("Welcome to the Zells shell.");
+        out.println();
+        out.println("Enter '<targetPath>[ <messagePath>]' so send messages.");
+        out.println("Enter '!!' to quit.");
+        out.println();
+
         out.print(PROMPT);
 
         String input;
         while ((input = in.readLine()) != null) {
             if (input.trim().isEmpty()) {
+                out.print(PROMPT);
                 continue;
+            }
+
+            if (input.equals("!!")) {
+                out.println();
+                out.println("Good bye =)");
+                server.stopListening();
+                System.exit(0);
             }
 
             String[] targetMessage = input.split(" ");
