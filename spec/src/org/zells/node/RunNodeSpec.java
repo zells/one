@@ -24,7 +24,11 @@ public class RunNodeSpec extends Specification {
         super.setUp();
         root = new Cell();
         server = new SpecServer();
-        new Node(root, server).setErrorStream(error).run();
+        new Node(root, server)
+                .setErrorStream(error)
+                .setMessenger(new Messenger()
+                        .setTimeOutMs(1))
+                .run();
     }
 
     @Test

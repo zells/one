@@ -65,17 +65,16 @@ public class RetryDeliveriesSpec extends Specification {
     public void increaseWaitTime() {
         root = new CountingCell();
         deliver(new Messenger()
-                .setTimeOutMs(400)
+                .setTimeOutMs(100)
                 .setWaitMs(2)
                 .setWaitFactorBase(2))
                 .waitForIt();
 
-        assertTrue(tries.size() >= 5);
+        assertTrue(tries.size() >= 4);
         assertTrue(tries.get(0) >= 4);
         assertTrue(tries.get(1) >= 8);
         assertTrue(tries.get(2) >= 16);
         assertTrue(tries.get(3) >= 32);
-        assertTrue(tries.get(4) >= 64);
     }
 
     private Messenger deliver(Messenger m) {

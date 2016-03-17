@@ -44,7 +44,7 @@ public class Messenger extends Thread {
     public void run() {
         int tryCount = 0;
         long start = System.currentTimeMillis();
-        while (!delivered && System.currentTimeMillis() - start < timeOutMs) {
+        while (!delivered && System.currentTimeMillis() - start <= timeOutMs) {
             tryCount++;
             delivered = cell.deliver(delivery);
 
