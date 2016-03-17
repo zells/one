@@ -1,10 +1,10 @@
 package org.zells.node;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.zells.node.io.ChiParser;
 import org.zells.node.model.react.Mailing;
-import org.zells.node.model.refer.*;
+import org.zells.node.model.refer.Name;
+import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.names.*;
 
 import java.util.List;
@@ -70,74 +70,66 @@ public class ParseChiSpec extends Specification {
 
     @Test
     public void composedPath() {
-        parse("foo.bar");
-        assertEquals(new Path(Child.name("foo"), Child.name("bar")), mailings.get(0).getTarget());
+        assertParsedName("foo.bar", Child.name("foo"), Child.name("bar"));
     }
 
     @Test
-    public void rootName() {
+    public void specialNames() {
         assertParsedName("*", Root.name());
-    }
-
-    @Test
-    public void parentName() {
         assertParsedName("^", Parent.name());
-    }
-
-    @Test
-    public void messageAlias() {
         assertParsedName("@", Message.name());
-    }
-
-    @Test
-    public void executionAlias() {
         assertParsedName("~", Execution.name());
     }
 
     @Test
-    public void quotedName() {
+    public void specialNamesInside() {
+        assertParsedName("foo*~^@", Child.name("foo*~^@"));
+    }
+
+    @Test
+    public void quotes() {
         assertParsedName("\"foo\"", Child.name("foo"));
-    }
-
-    @Test
-    public void escapeDots() {
         assertParsedName("\"foo.bar\"", Child.name("foo.bar"));
-    }
-
-    @Test
-    public void escapeSpaces() {
         assertParsedName("\"foo bar\"", Child.name("foo bar"));
-    }
-
-    @Test
-    public void escapeRoot() {
         assertParsedName("\"*\"", Child.name("*"));
-    }
-
-    @Test
-    public void escapeParent() {
         assertParsedName("\"^\"", Child.name("^"));
-    }
-
-    @Test
-    public void escapeMessage() {
         assertParsedName("\"@\"", Child.name("@"));
+        assertParsedName("\"~\"", Child.name("~"));
     }
 
     @Test
-    public void escapeExecution() {
-        assertParsedName("\"~\"", Child.name("~"));
+    public void skipDot() {
+        assertParsedName("*foo", Root.name(), Child.name("foo"));
+        assertParsedName("^foo", Parent.name(), Child.name("foo"));
+        assertParsedName("@foo", Message.name(), Child.name("foo"));
+        assertParsedName("~foo", Execution.name(), Child.name("foo"));
+        assertParsedName("\"*foo\"", Child.name("*foo"));
+        assertParsedName("\"^foo\"", Child.name("^foo"));
+        assertParsedName("\"@foo\"", Child.name("@foo"));
+        assertParsedName("\"~foo\"", Child.name("~foo"));
+    }
+
+    @Test
+    public void shortLiterals() {
+        assertParsedName("\"$foo\"", Child.name("$foo"));
+        assertParsedName("\"#foo\"", Child.name("#foo"));
+
+        assertParsedName("bar.$foo", Child.name("bar"), Child.name("$foo"));
+        assertParsedName("bar.#foo", Child.name("bar"), Child.name("#foo"));
+
+        assertParsedName("$foo.bar", Root.name(), Child.name("zells"), Child.name("literals"), Child.name("strings"), Child.name("foo"), Child.name("bar"));
+        assertParsedName("#foo.bar", Root.name(), Child.name("zells"), Child.name("literals"), Child.name("numbers"), Child.name("foo"), Child.name("bar"));
     }
 
     private void parse(String foo) {
         mailings = new ChiParser().parse(foo);
     }
 
-    private void assertName(Name name) {
+    private void assertName(Name... name) {
         assertEquals(new Path(name), mailings.get(0).getTarget());
     }
 
-    private void assertParsedName(String string, Name name) {
+    private void assertParsedName(String string, Name... name) {
         parse(string);
         assertName(name);
     }

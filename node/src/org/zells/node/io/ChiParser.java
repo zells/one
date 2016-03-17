@@ -9,17 +9,18 @@ import java.util.List;
 
 public class ChiParser {
 
-    public List<Mailing> parse(String input) {
-        List<Mailing> mailings = new ArrayList<Mailing>();
-        List<Path> paths = new ArrayList<Path>();
-        Path path = new Path();
-        StringBuilder name = new StringBuilder();
+    private final List<Mailing> mailings = new ArrayList<Mailing>();
+    private List<Path> paths = new ArrayList<Path>();
+    private Path path = new Path();
+    private StringBuilder name = new StringBuilder();
 
+    private boolean quoted = false;
+    private boolean wasQuoted = false;
+
+    public List<Mailing> parse(String input) {
         input = input + "\n";
         String[] lines = input.split("\n");
 
-        boolean quoted = false;
-        boolean wasQuoted = false;
         for (String line : lines) {
             line = line.trim() + " ";
 
@@ -31,34 +32,37 @@ public class ChiParser {
                 } else if (quoted && c == '"') {
                     quoted = false;
 
-                } else if (!quoted && (c == ' ' || c == '.' || c == '\t')) {
-                    String nameString = name.toString();
-                    if (!nameString.isEmpty()) {
-                        if (!wasQuoted && nameString.equals("*")) {
-                            path = path.with(Root.name());
-                        } else if (!wasQuoted && nameString.equals("^")) {
-                            path = path.with(Parent.name());
-                        } else if (!wasQuoted && nameString.equals("~")) {
-                            path = path.with(Execution.name());
-                        } else if (!wasQuoted && nameString.equals("@")) {
-                            path = path.with(Message.name());
-                        } else {
-                            path = path.with(Child.name(nameString));
-                        }
+                } else if (!quoted && name.toString().isEmpty() && c == '*') {
+                    name.append(c);
+                    endName();
 
-                        name = new StringBuilder();
-                        wasQuoted = false;
-                    }
+                } else if (!quoted && name.toString().isEmpty() && c == '~') {
+                    name.append(c);
+                    endName();
+
+                } else if (!quoted && name.toString().isEmpty() && c == '^') {
+                    name.append(c);
+                    endName();
+
+                } else if (!quoted && name.toString().isEmpty() && c == '@') {
+                    name.append(c);
+                    endName();
+
+                } else if (!quoted && name.toString().isEmpty() && path.isEmpty() && c == '$') {
+                    path = new Path(Root.name(), Child.name("zells"), Child.name("literals"), Child.name("strings"));
+
+                } else if (!quoted && name.toString().isEmpty() && path.isEmpty() && c == '#') {
+                    path = new Path(Root.name(), Child.name("zells"), Child.name("literals"), Child.name("numbers"));
+
+                } else if (!quoted && (c == ' ' || c == '.' || c == '\t')) {
+                    endName();
 
                     if (c == ' ' || c == '\t') {
-                        if (!path.isEmpty()) {
-                            paths.add(path);
-                        }
-                        path = new Path();
+                        endPath();
+                    }
 
-                        if (paths.size() == 2) {
-                            break;
-                        }
+                    if (paths.size() == 2) {
+                        break;
                     }
                 } else {
                     name.append(c);
@@ -74,5 +78,32 @@ public class ChiParser {
         }
 
         return mailings;
+    }
+
+    private void endPath() {
+        if (!path.isEmpty()) {
+            paths.add(path);
+        }
+        path = new Path();
+    }
+
+    private void endName() {
+        String nameString = name.toString();
+        if (!nameString.isEmpty()) {
+            if (!wasQuoted && nameString.equals("*")) {
+                path = path.with(Root.name());
+            } else if (!wasQuoted && nameString.equals("^")) {
+                path = path.with(Parent.name());
+            } else if (!wasQuoted && nameString.equals("~")) {
+                path = path.with(Execution.name());
+            } else if (!wasQuoted && nameString.equals("@")) {
+                path = path.with(Message.name());
+            } else {
+                path = path.with(Child.name(nameString));
+            }
+
+            name = new StringBuilder();
+            wasQuoted = false;
+        }
     }
 }
