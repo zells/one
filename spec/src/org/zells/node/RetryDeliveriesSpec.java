@@ -65,7 +65,7 @@ public class RetryDeliveriesSpec extends Specification {
     public void increaseWaitTime() {
         root = new CountingCell();
         deliver(new Messenger()
-                .setTimeOutMs(300)
+                .setTimeOutMs(400)
                 .setWaitMs(2)
                 .setWaitFactorBase(2))
                 .waitForIt();

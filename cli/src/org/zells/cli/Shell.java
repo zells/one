@@ -6,7 +6,6 @@ import org.zells.node.io.SocketServer;
 import org.zells.node.io.StandardProtocol;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
-import org.zells.node.model.react.Mailing;
 import org.zells.node.model.refer.*;
 
 import java.io.BufferedReader;
