@@ -91,10 +91,17 @@ public class ParseChiSpec extends Specification {
         assertParsedName("\"foo\"", Child.name("foo"));
         assertParsedName("\"foo.bar\"", Child.name("foo.bar"));
         assertParsedName("\"foo bar\"", Child.name("foo bar"));
+        assertParsedName("\"foo\nbar\"", Child.name("foo\nbar"));
         assertParsedName("\"*\"", Child.name("*"));
         assertParsedName("\"^\"", Child.name("^"));
         assertParsedName("\"@\"", Child.name("@"));
         assertParsedName("\"~\"", Child.name("~"));
+    }
+
+    @Test
+    public void unclosedQuote() {
+        parse("\"foo bar");
+        assertEquals(0, mailings.size());
     }
 
     @Test
@@ -126,6 +133,7 @@ public class ParseChiSpec extends Specification {
     }
 
     private void assertName(Name... name) {
+        assertEquals(1, mailings.size());
         assertEquals(new Path(name), mailings.get(0).getTarget());
     }
 
