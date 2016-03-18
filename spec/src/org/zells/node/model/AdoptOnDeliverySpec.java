@@ -1,7 +1,7 @@
-package org.zells.node;
+package org.zells.node.model;
 
 import org.junit.Test;
-import org.zells.node.model.Cell;
+import org.zells.node.Specification;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.names.Child;
 

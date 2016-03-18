@@ -1,12 +1,13 @@
-package org.zells.node;
+package org.zells.node.model;
 
 import org.junit.Test;
-import org.zells.node.model.Cell;
+import org.zells.node.Specification;
 import org.zells.node.model.connect.Signal;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.refer.Path;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class DeliverRemotelySpec extends Specification {
 

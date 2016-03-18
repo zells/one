@@ -1,6 +1,7 @@
-package org.zells.node;
+package org.zells.node.io;
 
 import org.junit.Test;
+import org.zells.node.Specification;
 import org.zells.node.model.connect.Signal;
 import org.zells.node.model.refer.names.Child;
 import org.zells.node.model.refer.names.Parent;

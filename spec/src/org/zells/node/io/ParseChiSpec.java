@@ -1,7 +1,7 @@
-package org.zells.node;
+package org.zells.node.io;
 
 import org.junit.Test;
-import org.zells.node.io.ChiParser;
+import org.zells.node.Specification;
 import org.zells.node.model.react.Mailing;
 import org.zells.node.model.refer.Name;
 import org.zells.node.model.refer.Path;
