@@ -16,9 +16,9 @@ public class PrintMessage extends Cell {
     }
 
     @Override
-    public boolean deliver(Delivery delivery) {
+    public Path deliver(Delivery delivery) {
         out.println(">>> " + delivery.getTarget() + " " + delivery.getMessage());
         out.print(Shell.PROMPT);
-        return true;
+        return delivery.getContext();
     }
 }

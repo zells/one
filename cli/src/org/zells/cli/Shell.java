@@ -3,14 +3,13 @@ package org.zells.cli;
 import org.zells.node.Messenger;
 import org.zells.node.Node;
 import org.zells.node.io.ChiParser;
-import org.zells.node.io.server.SocketServer;
 import org.zells.node.io.protocol.StandardProtocol;
+import org.zells.node.io.server.SocketServer;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.react.Mailing;
-import org.zells.node.model.refer.*;
+import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.names.Child;
-import org.zells.node.model.refer.names.Parent;
 import org.zells.node.model.refer.names.Root;
 
 import java.io.BufferedReader;
@@ -19,7 +18,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Shell {
@@ -96,19 +94,5 @@ public class Shell {
 
             out.print(PROMPT);
         }
-    }
-
-    protected Path path(String s) {
-        List<Name> names = new ArrayList<Name>();
-        for (String part : s.split("\\.")) {
-            if (part.equals("*")) {
-                names.add(Root.name());
-            } else if (part.equals("^")) {
-                names.add(Parent.name());
-            } else if (!part.isEmpty()) {
-                names.add(Child.name(part));
-            }
-        }
-        return new Path(names);
     }
 }
