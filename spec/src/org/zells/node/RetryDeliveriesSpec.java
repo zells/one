@@ -28,18 +28,14 @@ public class RetryDeliveriesSpec extends Specification {
     @Test
     public void fail() throws InterruptedException {
         Messenger m = deliver(new Messenger()
-                .setWaitFactorBase(0)
-                .setWaitMs(10)
-                .setTimeOutMs(50)
+                .setMaxRetries(0)
                 .whenFailed(new Runnable() {
                     @Override
                     public void run() {
                         failed = true;
                     }
-                }));
-
-        assertTrue(m.isDelivering());
-        m.waitForIt();
+                }))
+                .waitForIt();
 
         assertFalse(m.hasDelivered());
         assertTrue(failed);
@@ -48,10 +44,10 @@ public class RetryDeliveriesSpec extends Specification {
     @Test
     public void succeed() throws InterruptedException {
         Messenger m = deliver(new Messenger()
-                .setTimeOutMs(100)
-                .setWaitMs(0));
+                .setMaxRetries(1)
+                .setWaitMs(30));
 
-        Thread.sleep(30);
+        Thread.sleep(10);
         assertTrue(m.isDelivering());
         root.createChild("foo").setReaction(reaction);
 
@@ -66,16 +62,17 @@ public class RetryDeliveriesSpec extends Specification {
     public void increaseWaitTime() {
         root = new CountingCell();
         deliver(new Messenger()
-                .setTimeOutMs(200)
+                .setMaxRetries(5)
                 .setWaitMs(2)
                 .setWaitFactorBase(2))
                 .waitForIt();
 
-        assertTrue(tries.size() >= 4);
+        assertTrue(tries.size() == 5);
         assertTrue(tries.get(0) >= 4);
         assertTrue(tries.get(1) >= 8);
         assertTrue(tries.get(2) >= 16);
         assertTrue(tries.get(3) >= 32);
+        assertTrue(tries.get(4) >= 64);
     }
 
     private Messenger deliver(Messenger m) {

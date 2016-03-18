@@ -6,7 +6,7 @@ import org.zells.node.model.refer.Path;
 
 public class Messenger extends Thread {
 
-    private long timeOutMs = 100;
+    private long retries = 100;
     private long waitMs;
     private double waitFactorBase = 1;
 
@@ -17,8 +17,8 @@ public class Messenger extends Thread {
     private boolean isDelivering = false;
     private Runnable whenFailed;
 
-    public Messenger setTimeOutMs(long timeOutMs) {
-        this.timeOutMs = timeOutMs;
+    public Messenger setMaxRetries(long retries) {
+        this.retries = retries;
         return this;
     }
 
@@ -44,10 +44,13 @@ public class Messenger extends Thread {
     @Override
     public void run() {
         int tryCount = 0;
-        long start = System.currentTimeMillis();
-        while (receivedBy == null && System.currentTimeMillis() - start <= timeOutMs) {
-            tryCount++;
+        while (receivedBy == null) {
             receivedBy = cell.deliver(delivery);
+
+            if (tryCount == retries) {
+                break;
+            }
+            tryCount++;
 
             try {
                 Thread.sleep(Math.round(waitMs * Math.pow(waitFactorBase, tryCount)));
