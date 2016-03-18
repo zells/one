@@ -10,6 +10,7 @@ import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.names.Child;
 import org.zells.node.model.refer.names.Parent;
 import org.zells.node.model.refer.names.Root;
+import org.zells.node.model.reflect.ReflectionCell;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class Cell {
     private Map<Name, Cell> children = new HashMap<Name, Cell>();
     private final List<Peer> peers = new ArrayList<Peer>();
     private Path stem;
+    private Cell reflection;
 
     public Cell() {
     }
@@ -55,10 +57,16 @@ public class Cell {
     }
 
     public boolean hasChild(Name name) {
-        return children.containsKey(name);
+        return name.toString().equals("z") || children.containsKey(name);
     }
 
     public Cell getChild(Name name) {
+        if (name.toString().equals("z")) {
+            if (reflection == null) {
+                reflection = new ReflectionCell(this);
+            }
+            return reflection;
+        }
         return children.get(name);
     }
 
