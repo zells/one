@@ -124,11 +124,11 @@ public class Cell {
     }
 
     private Path deliverToChild(Delivery delivery) {
-        if (delivery.hasArrived() || !children.containsKey(delivery.nextTarget())) {
+        if (delivery.hasArrived() || !hasChild(delivery.nextTarget())) {
             return null;
         }
 
-        return children.get(delivery.nextTarget()).deliver(delivery.toChild());
+        return getChild(delivery.nextTarget()).deliver(delivery.toChild());
     }
 
     private Path deliverToPeers(Delivery delivery) {

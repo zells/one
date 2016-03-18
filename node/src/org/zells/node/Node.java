@@ -1,5 +1,6 @@
 package org.zells.node;
 
+import org.zells.lib.StandardLibraryCell;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.*;
 import org.zells.node.model.connect.signals.DeliverSignal;
@@ -19,6 +20,7 @@ public class Node implements SignalListener {
 
     public Node(Cell root, Server server) {
         this.root = root;
+        root.putChild("zells", new StandardLibraryCell(root));
         this.server = server;
     }
 
