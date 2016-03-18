@@ -34,7 +34,7 @@ public class Shell {
 
         root = new Cell();
         root.join(server.makePeer(remoteHost, remotePort), myPath, myHost, myPort);
-        root.putChild(name, new PrintMessage(root, System.out));
+        root.createChild("out").setReaction(new PrintMessage(System.out));
 
         self = new Path(Root.name(), Child.name(name));
     }
@@ -80,9 +80,9 @@ public class Shell {
 
             new Messenger()
                     .deliver(root, new Delivery(
-                            new Path(Root.name()),
-                            mailings.get(0).getTarget().in(self),
-                            mailings.get(0).getMessage().in(self)))
+                            self,
+                            mailings.get(0).getTarget(),
+                            mailings.get(0).getMessage()))
                     .whenFailed(new Runnable() {
                         @Override
                         public void run() {
