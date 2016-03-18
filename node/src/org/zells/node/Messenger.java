@@ -6,8 +6,8 @@ import org.zells.node.model.refer.Path;
 
 public class Messenger extends Thread {
 
-    private long retries = 100;
-    private long waitMs;
+    private long retries = 10;
+    private long waitMs = 0;
     private double waitFactorBase = 1;
 
     private Cell cell;
