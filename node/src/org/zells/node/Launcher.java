@@ -49,8 +49,9 @@ public class Launcher {
 
     private static class EchoMessage implements Reaction {
         @Override
-        public void execute(Cell cell, Delivery delivery) {
+        public Path execute(Cell cell, Delivery delivery) {
             cell.deliver(new Delivery(delivery.getContext(), delivery.getMessage(), new Path(Root.name())));
+            return delivery.getContext();
         }
     }
 }

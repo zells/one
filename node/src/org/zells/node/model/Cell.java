@@ -93,8 +93,7 @@ public class Cell {
             return null;
         }
 
-        reaction.execute(this, delivery);
-        return delivery.getContext();
+        return reaction.execute(this, delivery);
     }
 
     private Path deliverToParent(Delivery delivery) {

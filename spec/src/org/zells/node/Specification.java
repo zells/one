@@ -46,9 +46,10 @@ public abstract class Specification {
         public Delivery executedWith;
         public Cell executedBy;
         @Override
-        public void execute(Cell cell, Delivery delivery) {
+        public Path execute(Cell cell, Delivery delivery) {
             executedBy = cell;
             executedWith = delivery;
+            return delivery.getContext();
         }
     }
 
