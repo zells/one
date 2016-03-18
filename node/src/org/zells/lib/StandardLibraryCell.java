@@ -9,5 +9,6 @@ public class StandardLibraryCell extends Cell {
 
         Cell literals = createChild("literals");
         literals.putChild("numbers", new NumbersCell(literals));
+        literals.putChild("strings", new StringsCell(literals));
     }
 }

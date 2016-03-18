@@ -75,4 +75,9 @@ public class Delivery {
     public int hashCode() {
         return context.hashCode() + target.hashCode() + message.hashCode() + role.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return context + "(" + target + " <- " + message + ") " + role;
+    }
 }

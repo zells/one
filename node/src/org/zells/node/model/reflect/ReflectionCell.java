@@ -14,8 +14,9 @@ public class ReflectionCell extends Cell {
         super(cell);
         this.reflected = cell;
 
-        createChild("create").setReaction(new CreateReaction());
-        createChild("value").setReaction(new ValueReaction());
+        createChild("create").setReaction(new CreateChild());
+        createChild("value").setReaction(new GetValue());
+        createChild("stemFrom").setReaction(new ChangeStem());
     }
 
     private Path getValue(Cell cell, Delivery delivery, Path of) {
@@ -25,7 +26,7 @@ public class ReflectionCell extends Cell {
                 new Path()));
     }
 
-    private class CreateReaction implements Reaction {
+    private class CreateChild implements Reaction {
         @Override
         public Path execute(Cell cell, Delivery delivery) {
             Path value = getValue(cell, delivery, delivery.getMessage());
@@ -39,13 +40,27 @@ public class ReflectionCell extends Cell {
         }
     }
 
-    private class ValueReaction implements Reaction {
+    private class GetValue implements Reaction {
         @Override
         public Path execute(Cell cell, Delivery delivery) {
             if (reflected.getStem() == null) {
                 return delivery.getContext().up().up();
             }
             return getValue(cell, delivery, reflected.getStem());
+        }
+    }
+
+    private class ChangeStem implements Reaction {
+        @Override
+        public Path execute(Cell cell, Delivery delivery) {
+            Path value = getValue(cell, delivery, delivery.getMessage());
+
+            if (value == null) {
+                return null;
+            }
+
+            reflected.setStem(value);
+            return delivery.getContext();
         }
     }
 }

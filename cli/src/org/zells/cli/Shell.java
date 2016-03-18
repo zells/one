@@ -26,17 +26,17 @@ public class Shell {
     private final Path self;
     private final Cell root;
     private final SocketServer server;
+    private final Cell console;
 
     public Shell(String name, String myHost, int myPort, String remoteHost, int remotePort) throws IOException {
         server = new SocketServer(new StandardProtocol(), myPort);
 
-        Path myPath = new Path(Root.name(), Child.name(name));
+        self = new Path(Root.name(), Child.name(name));
 
         root = new Cell();
-        root.join(server.makePeer(remoteHost, remotePort), myPath, myHost, myPort);
-        root.createChild("out").setReaction(new PrintMessage(System.out));
-
-        self = new Path(Root.name(), Child.name(name));
+        root.join(server.makePeer(remoteHost, remotePort), self, myHost, myPort);
+        console = root.createChild(name);
+        console.createChild("out").setReaction(new PrintMessage(System.out));
     }
 
     public static void main(String[] args) throws Exception {
@@ -78,11 +78,13 @@ public class Shell {
                 continue;
             }
 
+            Delivery delivery = new Delivery(
+                    self,
+                    mailings.get(0).getTarget(),
+                    mailings.get(0).getMessage());
+
             new Messenger()
-                    .deliver(root, new Delivery(
-                            self,
-                            mailings.get(0).getTarget(),
-                            mailings.get(0).getMessage()))
+                    .deliver(console, delivery)
                     .whenFailed(new Runnable() {
                         @Override
                         public void run() {

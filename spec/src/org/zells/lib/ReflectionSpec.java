@@ -46,6 +46,15 @@ public class ReflectionSpec extends Specification {
         assertTrue(foo.hasChild(Child.name("bar")));
     }
 
+    @Test
+    public void changeStem() {
+        Cell foo = root.createChild("foo");
+        root.createChild("bar");
+
+        assertNotNull(deliver("foo.z.stemFrom", "bar"));
+        assertEquals(path("*.bar"), foo.getStem());
+    }
+
     private Path deliver(String target, String message) {
         return root.deliver(new Delivery(path("*"), path(target), path(message)));
     }
