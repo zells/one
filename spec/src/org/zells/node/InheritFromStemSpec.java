@@ -12,7 +12,7 @@ public class InheritFromStemSpec extends Specification {
 
     @Test
     public void noStem() {
-        assertFalse(deliver(new Cell(), ""));
+        assertNull(deliver(new Cell(), ""));
     }
 
     @Test
@@ -21,7 +21,8 @@ public class InheritFromStemSpec extends Specification {
         root.createChild("sub").setStem(path("*.stem"));
         Cell stem = root.createChild("stem").setReaction(reaction);
 
-        assertTrue(deliver(root, "sub"));
+        assertEquals(path("*.stem"), deliver(root, "sub"));
+
         assertEquals(stem, reaction.executedBy);
         assertEquals(path("*.sub"), reaction.executedWith.getRole());
         assertEquals(path("^.message"), reaction.executedWith.getMessage());
@@ -34,7 +35,8 @@ public class InheritFromStemSpec extends Specification {
         root.createChild("bar").setStem(path("*.foo"));
         root.createChild("baz").setStem(path("*.bar"));
 
-        assertTrue(deliver(root, "baz"));
+        assertEquals(path("*.foo"), deliver(root, "baz"));
+
         assertEquals(stem, reaction.executedBy);
         assertEquals(path("*.baz"), reaction.executedWith.getRole());
         assertEquals(path("^.message"), reaction.executedWith.getMessage());
@@ -45,7 +47,7 @@ public class InheritFromStemSpec extends Specification {
         Cell root = new Cell();
         root.createChild("foo").setStem(path("*.not"));
 
-        assertFalse(deliver(root, "foo"));
+        assertNull(deliver(root, "foo"));
     }
 
     @Test
@@ -56,7 +58,7 @@ public class InheritFromStemSpec extends Specification {
         root.createChild("stem").joinedBy(peer);
         root.createChild("sub").setStem(path("*.stem"));
 
-        assertTrue(deliver(root, "sub"));
+        assertEquals(path("*.stem"), deliver(root, "sub"));
         assertEquals(protocol.deliver(new Delivery(path("*.stem"), path(""), path("^.message"), path("*.sub"))), peer.sent);
     }
 
@@ -64,17 +66,17 @@ public class InheritFromStemSpec extends Specification {
     public void stemCannotBeChild() {
         Cell root = new Cell();
         root.createChild("foo").setStem(path("child"));
-        assertFalse(deliver(root, "foo"));
+        assertNull(deliver(root, "foo"));
     }
 
     @Test
     public void stemCannotBeSelf() {
         Cell root = new Cell();
         root.createChild("foo").setStem(path("*.foo.bar"));
-        assertFalse(deliver(root, "foo"));
+        assertNull(deliver(root, "foo"));
     }
 
-    private boolean deliver(Cell root, String target) {
+    private Path deliver(Cell root, String target) {
         return root.deliver(new Delivery(new Path(Root.name()), path(target), path("message")));
     }
 }

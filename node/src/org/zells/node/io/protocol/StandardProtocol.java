@@ -13,6 +13,11 @@ public class StandardProtocol implements Protocol {
         return new StandardOkSignal();
     }
 
+    @Override
+    public Signal received(Path path) {
+        return new StandardReceivedSignal(path);
+    }
+
     public Signal fail(String message) {
         return new StandardFailSignal(message);
     }
@@ -29,6 +34,8 @@ public class StandardProtocol implements Protocol {
     public Signal parse(String signal) throws IOException {
         if (StandardOkSignal.recognizes(signal)) {
             return StandardOkSignal.parse();
+        } else if (StandardReceivedSignal.recognizes(signal)) {
+            return StandardReceivedSignal.parse(signal);
         } else if (StandardFailSignal.recognizes(signal)) {
             return StandardFailSignal.parse(signal);
         } else if (StandardDeliverSignal.recognizes(signal)) {

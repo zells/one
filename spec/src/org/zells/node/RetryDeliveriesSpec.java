@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
+import org.zells.node.model.refer.Path;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +66,7 @@ public class RetryDeliveriesSpec extends Specification {
     public void increaseWaitTime() {
         root = new CountingCell();
         deliver(new Messenger()
-                .setTimeOutMs(100)
+                .setTimeOutMs(200)
                 .setWaitMs(2)
                 .setWaitFactorBase(2))
                 .waitForIt();
@@ -83,10 +84,10 @@ public class RetryDeliveriesSpec extends Specification {
 
     private class CountingCell extends Cell {
         @Override
-        public boolean deliver(Delivery delivery) {
+        public Path deliver(Delivery delivery) {
             if (last != 0) tries.add(System.currentTimeMillis() - last);
             last = System.currentTimeMillis();
-            return false;
+            return null;
         }
     }
 }

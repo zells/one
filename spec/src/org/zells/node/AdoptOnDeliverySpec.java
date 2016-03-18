@@ -79,7 +79,7 @@ public class AdoptOnDeliverySpec extends Specification {
     }
 
     private boolean deliver(Cell cell, String context, String target, String message) {
-        return cell.deliver(new Delivery(path(context), path(target), path(message)));
+        return cell.deliver(new Delivery(path(context), path(target), path(message))) != null;
     }
 
     private boolean deliver(Cell cell, String target) {

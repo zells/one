@@ -2,6 +2,7 @@ package org.zells.node;
 
 import org.zells.node.model.Cell;
 import org.zells.node.model.react.Delivery;
+import org.zells.node.model.refer.Path;
 
 public class Messenger extends Thread {
 
@@ -12,7 +13,7 @@ public class Messenger extends Thread {
     private Cell cell;
     private Delivery delivery;
 
-    private boolean delivered = false;
+    private Path receivedBy;
     private boolean isDelivering = false;
     private Runnable whenFailed;
 
@@ -44,9 +45,9 @@ public class Messenger extends Thread {
     public void run() {
         int tryCount = 0;
         long start = System.currentTimeMillis();
-        while (!delivered && System.currentTimeMillis() - start <= timeOutMs) {
+        while (receivedBy == null && System.currentTimeMillis() - start <= timeOutMs) {
             tryCount++;
-            delivered = cell.deliver(delivery);
+            receivedBy = cell.deliver(delivery);
 
             try {
                 Thread.sleep(Math.round(waitMs * Math.pow(waitFactorBase, tryCount)));
@@ -54,14 +55,14 @@ public class Messenger extends Thread {
             }
         }
 
-        if (!delivered && whenFailed != null) {
+        if (receivedBy == null && whenFailed != null) {
             whenFailed.run();
         }
         isDelivering = false;
     }
 
     public boolean hasDelivered() {
-        return delivered;
+        return receivedBy != null;
     }
 
     public boolean isDelivering() {
@@ -81,5 +82,9 @@ public class Messenger extends Thread {
     public Messenger whenFailed(Runnable runnable) {
         whenFailed = runnable;
         return this;
+    }
+
+    public Path getReceiver() {
+        return receivedBy;
     }
 }

@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Signal;
 import org.zells.node.model.react.Delivery;
+import org.zells.node.model.refer.Path;
 
 import static org.junit.Assert.*;
 
@@ -29,7 +30,7 @@ public class DeliverRemotelySpec extends Specification {
         foo.joinedBy(peer);
 
         assertNull(peer.sent);
-        assertTrue(deliver(root, "context", "foo", "message"));
+        assertEquals(path("context.foo"), deliver(root, "context", "foo", "message"));
         assertEquals(protocolDeliver("context.foo", "", "^.message"), peer.sent);
     }
 
@@ -41,7 +42,7 @@ public class DeliverRemotelySpec extends Specification {
         SpecPeer peer = new SpecPeer();
         foo.joinedBy(peer);
 
-        assertTrue(deliver(root, "context", "foo", "message"));
+        assertEquals(path("context.foo"), deliver(root, "context", "foo", "message"));
         assertEquals(protocolDeliver("context.foo", "", "^.message"), peer.sent);
     }
 
@@ -53,7 +54,7 @@ public class DeliverRemotelySpec extends Specification {
         SpecPeer peer = new SpecPeer();
         foo.joinedBy(peer);
 
-        assertTrue(deliver(root, "context", "foo.bar", "message"));
+        assertEquals(path("context.foo.bar"), deliver(root, "context", "foo.bar", "message"));
         assertEquals(protocolDeliver("context.foo", "bar", "^.message"), peer.sent);
     }
 
@@ -68,7 +69,7 @@ public class DeliverRemotelySpec extends Specification {
         foo.joinedBy(one);
         foo.joinedBy(two);
 
-        assertTrue(deliver(root, "context", "foo", "message"));
+        assertEquals(path("context.foo"), deliver(root, "context", "foo", "message"));
 
         assertEquals(protocolDeliver("context.foo", "", "^.message"), one.sent);
         assertEquals(protocolDeliver("context.foo", "", "^.message"), two.sent);
@@ -85,7 +86,7 @@ public class DeliverRemotelySpec extends Specification {
         remote.joinedBy(one);
         remote.joinedBy(two);
 
-        assertTrue(deliver(root, "context", "foo.bar", "message"));
+        assertEquals(path("context.foo.bar"), deliver(root, "context", "foo.bar", "message"));
 
         assertEquals(protocolDeliver("context.foo", "bar", "^.message"), one.sent);
         assertEquals(protocolDeliver("context.foo", "bar", "^.message"), two.sent);
@@ -99,7 +100,7 @@ public class DeliverRemotelySpec extends Specification {
         SpecPeer peer = new SpecPeer(protocol.fail("foo"));
         foo.joinedBy(peer);
 
-        assertFalse(deliver(root, "context", "foo.bar", "message"));
+        assertNull(deliver(root, "context", "foo.bar", "message"));
     }
 
     @Test
@@ -110,7 +111,7 @@ public class DeliverRemotelySpec extends Specification {
         Cell foo = root.createChild("foo").joinedBy(peer);
         foo.createChild("bar");
 
-        assertTrue(deliver(root, "*", "foo.baz", "message"));
+        assertEquals(path("*.foo.baz"), deliver(root, "*", "foo.baz", "message"));
         assertEquals(protocolDeliver("*.foo", "baz", "^.message"), peer.sent);
     }
 
@@ -123,7 +124,7 @@ public class DeliverRemotelySpec extends Specification {
         Cell bar = foo.createChild("bar");
         Cell baz = bar.createChild("baz");
 
-        assertTrue(deliver(baz, "*.foo.bar.baz", "bam", "message"));
+        assertEquals(path("*.foo.bar.baz.bam"), deliver(baz, "*.foo.bar.baz", "bam", "message"));
         assertEquals(protocolDeliver("*.foo", "bar.baz.bam", "bar.baz.message"), peer.sent);
     }
 
@@ -136,7 +137,7 @@ public class DeliverRemotelySpec extends Specification {
         Cell bar = foo.createChild("bar");
         Cell baz = bar.createChild("baz");
 
-        assertTrue(deliver(baz, "*.foo.bar.baz", "", "message"));
+        assertEquals(path("*.foo.bar.baz"), deliver(baz, "*.foo.bar.baz", "", "message"));
         assertEquals(protocolDeliver("*.foo", "bar.baz", "bar.baz.message"), peer.sent);
     }
 
@@ -144,7 +145,7 @@ public class DeliverRemotelySpec extends Specification {
         return protocol.deliver(new Delivery(path(context), path(target), path(message)));
     }
 
-    private boolean deliver(Cell cell, String context, String target, String message) {
+    private Path deliver(Cell cell, String context, String target, String message) {
         return cell.deliver(new Delivery(path(context), path(target), path(message)));
     }
 }

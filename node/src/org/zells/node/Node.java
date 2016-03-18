@@ -34,16 +34,14 @@ public class Node implements SignalListener {
     @Override
     public Signal respondTo(Signal signal) {
         try {
-            return handleSignal(signal)
-                    ? server.getProtocol().ok()
-                    : server.getProtocol().fail(signal.serialize());
+            return handleSignal(signal);
         } catch (Exception e) {
             e.printStackTrace(error);
             return server.getProtocol().fail(e.getMessage());
         }
     }
 
-    private boolean handleSignal(Signal signal) throws Exception {
+    private Signal handleSignal(Signal signal) throws Exception {
         if (signal instanceof DeliverSignal) {
             return handleDeliver((DeliverSignal) signal);
         } else if (signal instanceof JoinSignal) {
@@ -53,17 +51,22 @@ public class Node implements SignalListener {
         throw new Exception("Unknown signal");
     }
 
-    private boolean handleDeliver(DeliverSignal signal) throws Exception {
-        return new Messenger()
+    private Signal handleDeliver(DeliverSignal signal) throws Exception {
+        Messenger messenger = new Messenger()
                 .deliver(root, signal.getDelivery())
-                .waitForIt()
-                .hasDelivered();
+                .waitForIt();
+
+        if (messenger.hasDelivered()) {
+            return server.getProtocol().received(messenger.getReceiver());
+        }
+
+        return server.getProtocol().fail("Delivery failed");
     }
 
-    private boolean handleJoin(JoinSignal signal) throws Exception {
+    private Signal handleJoin(JoinSignal signal) throws Exception {
         Peer peer = server.makePeer(signal.getHost(), signal.getPort());
         resolve(signal.getPath(), root).joinedBy(peer);
-        return true;
+        return server.getProtocol().ok();
     }
 
     private Cell resolve(Path path, Cell cell) throws Exception {

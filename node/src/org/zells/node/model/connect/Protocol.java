@@ -9,6 +9,8 @@ public interface Protocol {
 
     public Signal ok();
 
+    public Signal received(Path path);
+
     public Signal fail(String message);
 
     public Signal deliver(Delivery delivery);

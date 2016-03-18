@@ -6,9 +6,11 @@ import org.zells.node.model.Cell;
 import org.zells.node.model.connect.Peer;
 import org.zells.node.model.connect.Protocol;
 import org.zells.node.model.connect.Signal;
+import org.zells.node.model.connect.signals.DeliverSignal;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.react.Reaction;
-import org.zells.node.model.refer.*;
+import org.zells.node.model.refer.Name;
+import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.names.Child;
 import org.zells.node.model.refer.names.Parent;
 import org.zells.node.model.refer.names.Root;
@@ -52,7 +54,7 @@ public abstract class Specification {
 
     protected class SpecPeer implements Peer {
         public String sentTo;
-        private Signal response = protocol.ok();
+        private Signal response;
         public Signal sent;
 
         public SpecPeer() {
@@ -69,7 +71,14 @@ public abstract class Specification {
         @Override
         public Signal send(Signal signal) {
             sent = signal;
-            return response;
+            if (response != null) {
+                return response;
+            } else if (signal instanceof DeliverSignal) {
+                Delivery delivery = ((DeliverSignal) signal).getDelivery();
+                return protocol.received(delivery.getTarget().in(delivery.getContext()));
+            } else {
+                return protocol.ok();
+            }
         }
 
         @Override

@@ -1,10 +1,12 @@
 package org.zells.node.model;
 
 import org.zells.node.model.connect.Peer;
-import org.zells.node.model.connect.signals.OkSignal;
+import org.zells.node.model.connect.Signal;
+import org.zells.node.model.connect.signals.ReceivedSignal;
 import org.zells.node.model.react.Delivery;
 import org.zells.node.model.react.Reaction;
-import org.zells.node.model.refer.*;
+import org.zells.node.model.refer.Name;
+import org.zells.node.model.refer.Path;
 import org.zells.node.model.refer.names.Child;
 import org.zells.node.model.refer.names.Parent;
 import org.zells.node.model.refer.names.Root;
@@ -70,78 +72,97 @@ public class Cell {
         return this;
     }
 
-    public boolean deliver(Delivery delivery) {
-        return deliverToSelf(delivery)
-                || deliverToParent(delivery)
-                || deliverToSelfRoot(delivery)
-                || deliverToRoot(delivery)
-                || deliverToChild(delivery)
-                || deliverToPeers(delivery)
-                || deliverToStem(delivery);
-    }
-
-    protected boolean execute(Delivery delivery) {
-        if (reaction != null) {
-            reaction.execute(this, delivery);
-            return true;
+    public Path deliver(Delivery delivery) {
+        Path reached;
+        if ((reached = deliverToSelf(delivery)) != null
+                || (reached = deliverToParent(delivery)) != null
+                || (reached = deliverToSelfRoot(delivery)) != null
+                || (reached = deliverToRoot(delivery)) != null
+                || (reached = deliverToChild(delivery)) != null
+                || (reached = deliverToPeers(delivery)) != null
+                || (reached = deliverToStem(delivery)) != null) {
+            return reached;
         }
 
-        return false;
+        return null;
     }
 
-    private boolean deliverToSelf(Delivery delivery) {
-        return delivery.hasArrived()
-                && execute(delivery);
+    private Path deliverToSelf(Delivery delivery) {
+        if (!delivery.hasArrived()
+                || reaction == null) {
+            return null;
+        }
+
+        reaction.execute(this, delivery);
+        return delivery.getContext();
     }
 
-    private boolean deliverToParent(Delivery delivery) {
-        return !delivery.hasArrived()
-                && delivery.nextTarget() instanceof Parent
-                && parent != null
-                && parent.deliver(delivery.toParent());
-
+    private Path deliverToParent(Delivery delivery) {
+        if (parent == null
+                || delivery.hasArrived()
+                || !delivery.nextTarget().equals(Parent.name())) {
+            return null;
+        }
+        return parent.deliver(delivery.toParent());
     }
 
-    private boolean deliverToSelfRoot(Delivery delivery) {
-        return !delivery.hasArrived()
-                && delivery.nextTarget() instanceof Root
-                && parent == null
-                && deliver(delivery.toSelf());
-
+    private Path deliverToSelfRoot(Delivery delivery) {
+        if (parent != null
+                || delivery.hasArrived()
+                || !delivery.nextTarget().equals(Root.name())) {
+            return null;
+        }
+        return deliver(delivery.toSelf());
     }
 
-    private boolean deliverToRoot(Delivery delivery) {
-        return !delivery.hasArrived()
-                && delivery.nextTarget() instanceof Root
-                && parent != null
-                && parent.deliver(delivery.toParent());
-
+    private Path deliverToRoot(Delivery delivery) {
+        if (parent == null
+                || delivery.hasArrived()
+                || !delivery.nextTarget().equals(Root.name())) {
+            return null;
+        }
+        return parent.deliver(delivery.toParent());
     }
 
-    private boolean deliverToChild(Delivery delivery) {
-        return !delivery.hasArrived()
-                && children.containsKey(delivery.nextTarget())
-                && children.get(delivery.nextTarget()).deliver(delivery.toChild());
+    private Path deliverToChild(Delivery delivery) {
+        if (delivery.hasArrived() || !children.containsKey(delivery.nextTarget())) {
+            return null;
+        }
+
+        return children.get(delivery.nextTarget()).deliver(delivery.toChild());
     }
 
-    private boolean deliverToPeers(Delivery delivery) {
+    private Path deliverToPeers(Delivery delivery) {
         for (Peer peer : peers) {
-            if (peer.send(peer.getProtocol().deliver(delivery)) instanceof OkSignal) {
-                return true;
+            Signal response = peer.send(peer.getProtocol().deliver(delivery));
+            if (response instanceof ReceivedSignal) {
+                return ((ReceivedSignal) response).getPath();
             }
         }
 
-        return parent != null
-                && parent.deliverToPeers(delivery.toParent());
+        if (parent == null) {
+            return null;
+        }
+
+        return parent.deliverToPeers(delivery.toParent());
     }
 
-    private boolean deliverToStem(Delivery delivery) {
-        return stem != null
-                && !(stem.first() instanceof Child)
-                && !stem.isIn(delivery.getContext())
-                && parent != null
-                && parent.deliver(delivery.toStem(stem))
-                && adopt(delivery);
+    private Path deliverToStem(Delivery delivery) {
+        Path reached;
+
+        if (stem == null
+                || parent == null
+                || (stem.first() instanceof Child)
+                || stem.isIn(delivery.getContext())) {
+            return null;
+        }
+
+        if ((reached = parent.deliver(delivery.toStem(stem))) == null) {
+            return null;
+        }
+
+        adopt(delivery);
+        return reached;
     }
 
     private boolean adopt(Delivery delivery) {

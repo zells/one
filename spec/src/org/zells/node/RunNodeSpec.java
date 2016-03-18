@@ -54,7 +54,7 @@ public class RunNodeSpec extends Specification {
     @Test
     public void cannotDeliver() {
         server.receive(protocolDeliver("*", "foo", "message"));
-        assertEquals(protocol.fail("DELIVER *.foo *.message *.foo"), server.responded);
+        assertEquals(protocol.fail("Delivery failed"), server.responded);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class RunNodeSpec extends Specification {
 
         server.receive(protocolDeliver("root", "foo.bar", "foo.message"));
 
-        assertEquals(protocol.ok(), server.responded);
+        assertEquals(protocol.received(path("root.foo.bar")), server.responded);
         assertEquals(child, reaction.executedBy);
     }
 
@@ -75,7 +75,7 @@ public class RunNodeSpec extends Specification {
 
         server.receive(protocolDeliver("root", "foo.bar", "foo.message", "some.role"));
 
-        assertEquals(protocol.ok(), server.responded);
+        assertEquals(protocol.received(path("root.foo.bar")), server.responded);
         assertEquals(path("some.role"), reaction.executedWith.getRole());
     }
 
@@ -86,7 +86,7 @@ public class RunNodeSpec extends Specification {
 
         server.receive(protocolDeliver("root", "*.foo.bar.^.^.foo.^.foo.*.foo.bar", "message"));
 
-        assertEquals(protocol.ok(), server.responded);
+        assertEquals(protocol.received(path("root.foo.bar")), server.responded);
         assertEquals(bar, reaction.executedBy);
     }
 
@@ -113,7 +113,7 @@ public class RunNodeSpec extends Specification {
     }
 
     private boolean deliver(String context, String target, String message) {
-        return root.deliver(new Delivery(path(context), path(target), path(message)));
+        return root.deliver(new Delivery(path(context), path(target), path(message))) != null;
     }
 
     private Signal protocolDeliver(String context, String target, String message) {
